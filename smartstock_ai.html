@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SmartStock AI — Smart Retail OS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --brand: #00c896;
+  --brand2: #0ea5e9;
+  --warn: #f59e0b;
+  --danger: #ef4444;
+  --info: #8b5cf6;
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #21262d;
+  --border: rgba(255,255,255,0.08);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --sidebar-w: 240px;
+  --radius: 12px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.light {
+  --bg: #f4f6f8;
+  --bg2: #ffffff;
+  --bg3: #edf0f3;
+  --border: rgba(0,0,0,0.08);
+  --text: #1a202c;
+  --text2: #64748b;
+  --shadow: 0 4px 24px rgba(0,0,0,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+/* ── SIDEBAR ── */
+#sidebar {
+  position:fixed;top:0;left:0;height:100vh;width:var(--sidebar-w);
+  background:linear-gradient(180deg,rgba(0,200,150,0.08) 0%,var(--bg2) 40%);
+  border-right:1px solid var(--border);
+  backdrop-filter:blur(20px);
+  display:flex;flex-direction:column;z-index:100;
+  transition:transform .3s ease;
+}
+.light #sidebar{background:linear-gradient(180deg,rgba(0,200,150,0.06) 0%,#fff 40%)}
+.sidebar-logo{padding:22px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sidebar-logo .icon{width:36px;height:36px;background:linear-gradient(135deg,#00c896,#0ea5e9);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sidebar-logo .brand{font-size:15px;font-weight:700;color:var(--text);line-height:1.2}
+.sidebar-logo .brand small{display:block;font-size:10px;font-weight:400;color:var(--text2)}
+.sidebar-lang{padding:12px 14px}
+.sidebar-lang select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.sidebar-nav{padding:8px 10px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);padding:6px 8px 4px;margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text2);margin-bottom:2px;transition:all .18s;font-weight:500}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,rgba(0,200,150,0.18),rgba(14,165,233,0.1));color:var(--brand);border-left:3px solid var(--brand)}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-alerts{padding:10px 12px;border-top:1px solid var(--border)}
+.alert-pill{background:var(--bg3);border-radius:8px;padding:7px 10px;margin-bottom:5px;font-size:11px;border-left:3px solid var(--brand);line-height:1.5}
+.alert-pill.crit{border-color:var(--danger);background:rgba(239,68,68,0.08)}
+.alert-pill.warn{border-color:var(--warn);background:rgba(245,158,11,0.08)}
+.alert-pill.info{border-color:var(--brand2);background:rgba(14,165,233,0.08)}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center}
+.theme-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;flex:1;font-family:'DM Sans',sans-serif}
+.theme-btn:hover{color:var(--text)}
+
+/* ── MAIN ── */
+#main{margin-left:var(--sidebar-w);min-height:100vh;padding:24px;transition:margin .3s}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text2);font-weight:600}
+.badge.live{color:var(--brand);border-color:rgba(0,200,150,0.3)}
+/* ── METRICS ── */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;transition:transform .15s}
+.metric-card:hover{transform:translateY(-2px)}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--brand))}
+.metric-card.warn::before{background:var(--warn)}
+.metric-card.danger::before{background:var(--danger)}
+.metric-card.info::before{background:var(--info)}
+.metric-icon{font-size:20px;margin-bottom:8px}
+.metric-val{font-size:26px;font-weight:700;color:var(--text);font-family:'Space Mono',monospace}
+.metric-label{font-size:11px;color:var(--text2);margin-top:3px}
+.metric-delta{font-size:11px;margin-top:5px;padding:2px 7px;border-radius:20px;display:inline-block;background:rgba(0,200,150,0.12);color:var(--brand)}
+.metric-delta.neg{background:rgba(239,68,68,0.12);color:var(--danger)}
+/* ── GRID ── */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.card-title span{opacity:.5}
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;border-radius:9px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--bg3)}
+thead th{padding:9px 12px;text-align:left;color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+tbody tr{border-top:1px solid var(--border);transition:background .12s}
+tbody tr:hover{background:var(--bg3)}
+td{padding:8px 12px;color:var(--text);vertical-align:middle;white-space:nowrap}
+.status-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.s-ok{background:rgba(0,200,150,0.12);color:#00c896}
+.s-low{background:rgba(245,158,11,0.12);color:#f59e0b}
+.s-exp{background:rgba(239,68,68,0.12);color:#ef4444}
+.s-over{background:rgba(14,165,233,0.12);color:#0ea5e9}
+.s-dead{background:rgba(139,92,246,0.12);color:#8b5cf6}
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:linear-gradient(135deg,#00c896,#0ea5e9);color:#fff}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-warn{background:rgba(245,158,11,0.15);color:var(--warn);border:1px solid rgba(245,158,11,0.3)}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
+.btn-sell{background:rgba(0,200,150,0.15);color:var(--brand);border:1px solid rgba(0,200,150,0.3)}
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:11px;color:var(--text2);font-weight:600}
+.form-group input,.form-group select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.form-group input:focus,.form-group select:focus{border-color:var(--brand)}
+/* ── CHARTS ── */
+canvas{max-width:100%}
+/* ── PROGRESS ── */
+.progress-bar{background:var(--bg3);border-radius:20px;height:7px;overflow:hidden;margin:4px 0}
+.progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .5s ease}
+.progress-fill.warn{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+/* ── VOICE ── */
+.voice-btn{position:fixed;bottom:24px;right:24px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#00c896,#0ea5e9);border:none;cursor:pointer;font-size:22px;color:#fff;box-shadow:0 4px 20px rgba(0,200,150,0.4);transition:all .2s;z-index:200;display:flex;align-items:center;justify-content:center}
+.voice-btn:hover{transform:scale(1.1)}
+.voice-btn.listening{animation:pulse 1s infinite;background:linear-gradient(135deg,#ef4444,#f59e0b)}
+@keyframes pulse{0%,100%{box-shadow:0 4px 20px rgba(0,200,150,0.4)}50%{box-shadow:0 4px 40px rgba(0,200,150,0.8)}}
+/* ── TOAST ── */
+#toasts{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-size:12px;box-shadow:var(--shadow);animation:toastin .3s ease;max-width:280px}
+.toast.success{border-left:3px solid var(--brand)}
+.toast.error{border-left:3px solid var(--danger)}
+@keyframes toastin{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+/* ── CALENDAR ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:8px}
+.cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:7px;font-size:11px;cursor:pointer;position:relative;font-weight:500;transition:all .15s}
+.cal-cell:hover{background:var(--bg3)}
+.cal-cell.today{background:rgba(0,200,150,0.15);color:var(--brand);font-weight:700}
+.cal-cell.festival{background:rgba(245,158,11,0.15)}
+.cal-cell.festival::after{content:'★';position:absolute;top:1px;right:2px;font-size:7px;color:var(--warn)}
+.cal-cell.selected{background:var(--brand);color:#fff}
+.cal-cell.other-month{opacity:.3}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-nav button{background:var(--bg3);border:none;color:var(--text);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:14px}
+/* ── SECTIONS ── */
+.section{display:none}
+.section.active{display:block}
+/* ── EXPANDER ── */
+.expander{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
+.expander-header{background:var(--bg3);padding:11px 16px;cursor:pointer;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.expander-body{display:none;padding:16px;background:var(--bg2)}
+.expander-body.open{display:block}
+/* ── SEARCH ── */
+.search-box{position:relative;margin-bottom:14px}
+.search-box input{width:100%;padding:9px 14px 9px 36px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none}
+.search-box input:focus{border-color:var(--brand)}
+.search-box::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:13px}
+/* ── WA CHAT ── */
+.chat-window{background:var(--bg3);border-radius:var(--radius);padding:14px;min-height:260px;max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.chat-msg{max-width:80%;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5}
+.chat-msg.received{background:var(--bg2);border-radius:10px 10px 10px 2px;align-self:flex-start}
+.chat-msg.sent{background:rgba(0,200,150,0.15);border-radius:10px 10px 2px 10px;align-self:flex-end;text-align:right}
+.chat-msg .msg-time{font-size:9px;color:var(--text2);margin-top:3px}
+/* ── FESTIVAL BADGE ── */
+.festival-tag{display:inline-block;background:rgba(245,158,11,0.15);color:var(--warn);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600}
+.ipl-tag{display:inline-block;background:rgba(139,92,246,0.15);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin-left:6px}
+/* ── SCROLL ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* ── MOBILE ── */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .row2,.row3{grid-template-columns:1fr}
+}
+/* Doctor cards */
+.rec-card{border-radius:9px;padding:12px 14px;margin-bottom:8px;border-left:4px solid}
+.rec-red{background:rgba(239,68,68,0.08);border-color:#ef4444}
+.rec-yellow{background:rgba(245,158,11,0.08);border-color:#f59e0b}
+.rec-blue{background:rgba(14,165,233,0.08);border-color:#0ea5e9}
+.rec-title{font-weight:600;font-size:13px;margin-bottom:3px}
+.rec-desc{font-size:11px;color:var(--text2);line-height:1.5}
+/* Analytics extras */
+.waste-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px}
+.waste-row .lbl{width:130px;flex-shrink:0;color:var(--text2)}
+.waste-row .bar-wrap{flex:1}
+/* Voice modal */
+#voice-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center}
+#voice-modal.open{display:flex}
+.voice-modal-inner{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:340px;text-align:center}
+.voice-anim{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00c896,#0ea5e9);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;animation:pulse 1s infinite}
+.voice-transcript{min-height:40px;font-size:14px;color:var(--text2);margin:12px 0;padding:10px;background:var(--bg3);border-radius:8px}
+/* Sell modal */
+#sell-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center}
+#sell-modal.open{display:flex}
+.sell-modal-inner{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:320px}
+.sell-modal-inner h3{margin-bottom:14px;font-size:15px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">🛒</div>
+    <div class="brand" id="sb-brand">SmartStock AI<small id="sb-sub">Smart Retail OS</small></div>
+  </div>
+  <div class="sidebar-lang">
+    <select id="lang-select">
+      <option value="en">🌐 English</option>
+      <option value="hi">🇮🇳 हिंदी</option>
+      <option value="kn">🌟 ಕನ್ನಡ</option>
+      <option value="te">📌 తెలుగు</option>
+      <option value="ta">🎯 தமிழ்</option>
+    </select>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-label" id="nav-label-main">MAIN</div>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span><span data-t="nav_dashboard">Dashboard</span></div>
+    <div class="nav-item" data-page="inventory"><span class="nav-icon">📦</span><span data-t="nav_inventory">Inventory</span></div>
+    <div class="nav-item" data-page="forecast"><span class="nav-icon">📈</span><span data-t="nav_forecast">Forecast</span></div>
+    <div class="nav-item" data-page="doctor"><span class="nav-icon">🤖</span><span data-t="nav_doctor">AI Doctor</span></div>
+    <div class="nav-label" id="nav-label-tools">TOOLS</div>
+    <div class="nav-item" data-page="analytics"><span class="nav-icon">📉</span><span data-t="nav_analytics">Analytics</span></div>
+    <div class="nav-item" data-page="alerts"><span class="nav-icon">🔔</span><span data-t="nav_alerts">Alerts</span></div>
+    <div class="nav-item" data-page="calendar"><span class="nav-icon">📅</span><span data-t="nav_calendar">Festival Calendar</span></div>
+  </div>
+  <div class="sidebar-alerts" id="sidebar-alerts-container"></div>
+  <div class="sidebar-footer">
+    <button class="theme-btn" onclick="toggleTheme()" id="theme-btn-label">☀️ Light Mode</button>
+    <button class="theme-btn" onclick="exportCSV()">📥 Export</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- DASHBOARD -->
+  <div class="section active" id="page-dashboard">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="dash-title">📊 Dashboard</div>
+        <div class="page-sub" id="dash-sub">Loading...</div>
+      </div>
+      <div class="topbar-right">
+        <span class="badge live" id="ipl-badge">🏏 IPL Season Active</span>
+        <span class="badge" id="season-badge">☀️ Summer</span>
+        <span class="badge" id="festival-next-badge">🎉 Next: —</span>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-icon">📦</div>
+        <div class="metric-val" id="m-skus">0</div>
+        <div class="metric-label" data-t="m_skus">Total SKUs</div>
+        <div class="metric-delta" id="m-skus-delta">0 low stock</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">💰</div>
+        <div class="metric-val" id="m-rev">₹0</div>
+        <div class="metric-label" data-t="m_rev">Est. Revenue</div>
+        <div class="metric-delta">↑ 12% this week</div>
+      </div>
+      <div class="metric-card warn">
+        <div class="metric-icon">⚠️</div>
+        <div class="metric-val" id="m-expiry">0</div>
+        <div class="metric-label" data-t="m_expiry">Expiry Risk</div>
+        <div class="metric-delta" id="m-expiry-delta">items &lt; 7 days</div>
+      </div>
+      <div class="metric-card danger">
+        <div class="metric-icon">🔴</div>
+        <div class="metric-val" id="m-low">0</div>
+        <div class="metric-label" data-t="m_low">Low Stock</div>
+        <div class="metric-delta neg" id="m-low-delta">need reorder</div>
+      </div>
+    </div>
+
+    <!-- Sales Today -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">📊 <span data-t="today_sales">Today's Sales &amp; Current Stock</span> <span id="today-date-badge" class="festival-tag" style="margin-left:auto"></span></div>
+      <div class="tbl-wrap">
+        <table id="sales-today-table">
+          <thead><tr>
+            <th data-t="th_product">Product</th>
+            <th data-t="th_sold_today">Sold Today</th>
+            <th data-t="th_current_stock">Current Stock</th>
+            <th data-t="th_reorder_pt">Reorder Point</th>
+            <th data-t="th_safety_buffer">Safety Buffer</th>
+            <th data-t="th_status">Status</th>
+            <th data-t="th_action">Action</th>
+          </tr></thead>
+          <tbody id="sales-today-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">📦 <span data-t="stock_health">Stock Health</span></div>
+        <canvas id="donut-chart" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 <span data-t="sales_trend">7-Day Sales Trend</span></div>
+        <canvas id="trend-chart" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">🌤️ <span data-t="seasonal_intel">Seasonal Intelligence</span></div>
+        <div id="season-info-box" style="background:var(--bg3);border-radius:9px;padding:12px;margin-bottom:10px;font-size:13px"></div>
+        <div id="season-boost-table"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔍 <span data-t="barcode_lookup">Product Lookup</span></div>
+        <div class="search-box">
+          <input type="text" id="barcode-search" placeholder="Search product or barcode...">
+        </div>
+        <div id="barcode-result"></div>
+      </div>
+    </div>
+
+    <div id="expiry-warnings"></div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="section" id="page-inventory">
+    <div class="topbar">
+      <div>
+        <div class="page-title" data-t="nav_inventory">📦 Inventory</div>
+        <div class="page-sub" data-t="inv_sub">Manage your products, add stock, track reorder points</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddForm()">➕ <span data-t="add_item">Add Item</span></button>
+    </div>
+
+    <div class="expander" id="add-form-expander" style="display:none">
+      <div class="expander-header" onclick="toggleExpander('add-form-expander')">
+        ➕ <span data-t="add_new_item">Add New Item</span> <span>▼</span>
+      </div>
+      <div class="expander-body open">
+        <div class="form-grid">
+          <div class="form-group"><label data-t="f_name">Product Name</label><input id="f-name" type="text" placeholder="e.g. Milk Packets"></div>
+          <div class="form-group"><label data-t="f_qty">Quantity</label><input id="f-qty" type="number" value="10" min="0"></div>
+          <div class="form-group"><label data-t="f_price">Price (₹)</label><input id="f-price" type="number" value="50" min="0"></div>
+          <div class="form-group"><label data-t="f_expiry">Expiry Date</label><input id="f-expiry" type="date"></div>
+          <div class="form-group"><label data-t="f_supplier">Supplier</label><input id="f-supplier" type="text" placeholder="Supplier name"></div>
+          <div class="form-group"><label data-t="f_category">Category</label>
+            <select id="f-category">
+              <option>Grains</option><option>Dairy</option><option>Beverages</option>
+              <option>Bakery</option><option>Snacks</option><option>Household</option>
+              <option>Condiments</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label data-t="f_minqty">Min Qty</label><input id="f-minqty" type="number" value="10" min="1"></div>
+          <div class="form-group"><label data-t="f_lead">Lead Days</label><input id="f-lead" type="number" value="3" min="1"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addItem()" style="width:100%"><span data-t="btn_save">Save Item</span></button>
+      </div>
+    </div>
+
+    <div class="search-box"><input type="text" id="inv-search" placeholder="Search products or suppliers..." oninput="renderInventoryTable()"></div>
+
+    <div class="card">
+      <div class="tbl-wrap">
+        <table id="inv-table">
+          <thead><tr>
+            <th data-t="th_product">Product</th>
+            <th data-t="th_category">Category</th>
+            <th data-t="th_qty">Qty</th>
+            <th data-t="th_price">Price ₹</th>
+            <th data-t="th_expiry_h">Expiry</th>
+            <th data-t="th_supplier">Supplier</th>
+            <th data-t="th_reorder_pt">Reorder Pt.</th>
+            <th data-t="th_safety_buffer">Safety Buffer</th>
+            <th data-t="th_days_left">Days Left</th>
+            <th data-t="th_sold_today">Sold Today</th>
+            <th data-t="th_status">Status</th>
+            <th data-t="th_action">Actions</th>
+          </tr></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+      <button class="btn btn-ghost" onclick="exportCSV()">⬇️ <span data-t="export_csv">Export CSV</span></button>
+      <label class="btn btn-ghost" style="cursor:pointer">📂 <span data-t="upload_csv">Upload CSV</span><input type="file" accept=".csv" style="display:none" onchange="importCSV(this)"></label>
+    </div>
+  </div>
+
+  <!-- FORECAST -->
+  <div class="section" id="page-forecast">
+    <div class="topbar">
+      <div>
+        <div class="page-title" data-t="nav_forecast">📈 Demand Forecast</div>
+        <div class="page-sub" data-t="forecast_sub">AI-powered predictions with season, festival &amp; IPL impact</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="form-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="form-group"><label data-t="f_select_product">Select Product</label>
+          <select id="fc-product" onchange="renderForecast()"></select>
+        </div>
+        <div class="form-group"><label data-t="f_period">Forecast Period</label>
+          <select id="fc-period" onchange="renderForecast()">
+            <option value="7">Next 7 days</option>
+            <option value="14">Next 14 days</option>
+            <option value="30">Next 30 days</option>
+          </select>
+        </div>
+        <div class="form-group"><label data-t="f_date">Select Date</label>
+          <input type="date" id="fc-date" onchange="renderForecast()">
+        </div>
+        <div class="form-group"><label data-t="f_festival_impact">Festival Impact</label>
+          <div id="fc-festival-label" style="padding:8px 10px;background:var(--bg3);border-radius:8px;font-size:12px;color:var(--text2)">None detected</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="metrics-row" id="fc-metrics" style="grid-template-columns:repeat(4,1fr)"></div>
+
+    <div class="row2">
+      <div class="card"><div class="card-title">📊 <span data-t="forecast_chart">AI Forecast Chart</span></div><canvas id="fc-chart" height="200"></canvas></div>
+      <div class="card"><div class="card-title">📅 <span data-t="hist_chart">Last 30 Days Actual vs Forecast</span></div><canvas id="hist-chart" height="200"></canvas></div>
+    </div>
+
+    <div class="card" id="fc-insights" style="margin-top:0"></div>
+  </div>
+
+  <!-- AI DOCTOR -->
+  <div class="section" id="page-doctor">
+    <div class="topbar">
+      <div>
+        <div class="page-title" data-t="nav_doctor">🤖 AI Stock Doctor</div>
+        <div class="page-sub" data-t="doctor_sub">Intelligent recommendations, anomaly detection &amp; P&amp;L analysis</div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">💊 <span data-t="recommendations">Recommendations</span></div>
+        <div id="doctor-recs"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📉 <span data-t="pl_impact">P&amp;L Impact</span></div>
+        <canvas id="pl-chart" height="220"></canvas>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0">
+      <div class="card-title">🚨 <span data-t="dead_stock">Dead Stock &amp; Overstock Table</span></div>
+      <div class="tbl-wrap" id="doctor-issues-wrap"></div>
+    </div>
+    <div class="card" style="margin-top:16px" id="anomaly-card">
+      <div class="card-title">🔍 <span data-t="anomaly_detect">Anomaly &amp; Theft Detection</span></div>
+      <div id="anomaly-list"></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="section" id="page-analytics">
+    <div class="topbar">
+      <div>
+        <div class="page-title" data-t="nav_analytics">📉 Analytics</div>
+        <div class="page-sub" data-t="analytics_sub">Performance insights, category breakdown &amp; waste reduction</div>
+      </div>
+    </div>
+    <div class="metrics-row">
+      <div class="metric-card"><div class="metric-icon">🎯</div><div class="metric-val">87%</div><div class="metric-label" data-t="forecast_acc">Forecast Accuracy</div><div class="metric-delta">↑ 3% this week</div></div>
+      <div class="metric-card"><div class="metric-icon">♻️</div><div class="metric-val">23%</div><div class="metric-label" data-t="waste_reduced">Waste Reduced</div><div class="metric-delta">vs last month</div></div>
+      <div class="metric-card"><div class="metric-icon">📊</div><div class="metric-val">18.4%</div><div class="metric-label" data-t="profit_margin">Profit Margin</div><div class="metric-delta">↑ 1.2%</div></div>
+      <div class="metric-card"><div class="metric-icon">🤖</div><div class="metric-val">₹8,200</div><div class="metric-label" data-t="ai_savings">AI Savings</div><div class="metric-delta">from AI suggestions</div></div>
+    </div>
+    <div class="row2">
+      <div class="card"><div class="card-title">💰 <span data-t="rev_by_cat">Revenue by Category</span></div><canvas id="cat-pie" height="220"></canvas></div>
+      <div class="card"><div class="card-title">📦 <span data-t="demand_vs_actual">Demand vs Actual (Top 8)</span></div><canvas id="demand-bar" height="220"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">♻️ <span data-t="waste_progress">Zero-Waste AI Progress</span></div>
+      <div id="waste-progress-list"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">📋 <span data-t="full_stock_status">Full Stock Status Breakdown</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th data-t="th_product">Product</th><th data-t="th_qty">Qty</th><th data-t="th_price">Price ₹</th><th data-t="th_status">Status</th><th data-t="th_days_left">Days Left</th><th data-t="th_reorder_pt">Reorder Pt.</th><th>Est. Value ₹</th><th data-t="th_category">Category</th></tr></thead>
+          <tbody id="analytics-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="section" id="page-alerts">
+    <div class="topbar">
+      <div>
+        <div class="page-title" data-t="nav_alerts">🔔 Smart Alerts Center</div>
+        <div class="page-sub" data-t="alerts_sub">WhatsApp-style alerts &amp; system feed</div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">📲 <span data-t="wa_alerts">WhatsApp-Style Alerts</span></div>
+        <div class="chat-window" id="chat-window"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input type="text" id="chat-input" placeholder="Type a message or voice command..." style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none">
+          <button class="btn btn-primary" onclick="sendChatMsg()">Send 📤</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚠️ <span data-t="system_feed">System Alert Feed</span></div>
+        <div id="alert-feed" style="max-height:380px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FESTIVAL CALENDAR -->
+  <div class="section" id="page-calendar">
+    <div class="topbar">
+      <div>
+        <div class="page-title" data-t="nav_calendar">📅 Festival Calendar</div>
+        <div class="page-sub" data-t="cal_sub">Track Indian festivals and their impact on demand</div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">🗓️ <span data-t="calendar_view">Calendar View</span></div>
+        <div class="cal-nav">
+          <button onclick="calPrev()">◀</button>
+          <strong id="cal-month-label"></strong>
+          <button onclick="calNext()">▶</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px;text-align:center;font-size:10px;color:var(--text2)">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div id="cal-festival-info" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎊 <span data-t="festival_impact">Festival Demand Impact</span></div>
+        <div id="festival-list"></div>
+        <div style="margin-top:14px">
+          <div class="card-title">🏏 IPL Season Impact</div>
+          <div style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.3);border-radius:9px;padding:12px;font-size:12px;color:var(--text2)">
+            <strong style="color:#8b5cf6">IPL 2025 Active (Mar–May)</strong><br>
+            During IPL matches, demand for <strong>Beverages (+45%)</strong>, <strong>Snacks (+55%)</strong> spikes on match days (evenings 6–10 PM). Retailers should stock up on chips, cold drinks & packaged snacks before match days.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- VOICE BUTTON -->
+<button class="voice-btn" id="voice-btn" onclick="openVoice()" title="Voice Assistant">🎤</button>
+
+<!-- VOICE MODAL -->
+<div id="voice-modal">
+  <div class="voice-modal-inner">
+    <div class="voice-anim">🎤</div>
+    <div style="font-weight:600;font-size:15px;margin-bottom:6px" data-t="voice_listening">Listening...</div>
+    <div class="voice-transcript" id="voice-transcript">Say a command...</div>
+    <div style="font-size:11px;color:var(--text2);margin:8px 0" data-t="voice_examples">Try: "Show low stock" · "Add 20 milk" · "Total value"</div>
+    <button class="btn btn-ghost" onclick="closeVoice()" style="width:100%;margin-top:8px" data-t="voice_close">Close</button>
+  </div>
+</div>
+
+<!-- SELL MODAL -->
+<div id="sell-modal">
+  <div class="sell-modal-inner">
+    <h3>💰 <span data-t="sell_product">Sell Product</span></h3>
+    <div class="form-group" style="margin-bottom:12px">
+      <label data-t="f_select_product">Product</label>
+      <select id="sell-product-select" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif"></select>
+    </div>
+    <div class="form-group" style="margin-bottom:14px">
+      <label data-t="f_qty">Units to Sell</label>
+      <input type="number" id="sell-qty" value="1" min="1" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="confirmSell()">✅ Sell</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="closeSell()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// LANGUAGE DICTIONARY
+// ═══════════════════════════════════════════════════════════════
+const LANG = {
+  en: {
+    nav_dashboard:"Dashboard",nav_inventory:"Inventory",nav_forecast:"Forecast",
+    nav_doctor:"AI Doctor",nav_analytics:"Analytics",nav_alerts:"Alerts",nav_calendar:"Festival Calendar",
+    m_skus:"Total SKUs",m_rev:"Est. Revenue",m_expiry:"Expiry Risk",m_low:"Low Stock",
+    today_sales:"Today's Sales & Current Stock",
+    th_product:"Product",th_category:"Category",th_qty:"Qty",th_price:"Price ₹",
+    th_expiry_h:"Expiry",th_supplier:"Supplier",th_reorder_pt:"Reorder Point",
+    th_safety_buffer:"Safety Buffer",th_days_left:"Days Left",th_sold_today:"Sold Today",
+    th_status:"Status",th_action:"Actions",th_current_stock:"Current Stock",
+    stock_health:"Stock Health",sales_trend:"7-Day Sales Trend",
+    seasonal_intel:"Seasonal Intelligence",barcode_lookup:"Product Lookup",
+    add_item:"Add Item",add_new_item:"Add New Item",btn_save:"Save Item",
+    export_csv:"Export CSV",upload_csv:"Upload CSV",
+    f_name:"Product Name",f_qty:"Quantity",f_price:"Price (₹)",f_expiry:"Expiry Date",
+    f_supplier:"Supplier",f_category:"Category",f_minqty:"Min Qty",f_lead:"Lead Days",
+    f_select_product:"Select Product",f_period:"Forecast Period",f_date:"Select Date",f_festival_impact:"Festival Impact",
+    forecast_chart:"AI Forecast Chart",hist_chart:"Last 30 Days Actual vs Forecast",
+    inv_sub:"Manage your products, add stock, track reorder points",
+    forecast_sub:"AI-powered predictions with season, festival & IPL impact",
+    doctor_sub:"Intelligent recommendations, anomaly detection & P&L analysis",
+    analytics_sub:"Performance insights, category breakdown & waste reduction",
+    alerts_sub:"WhatsApp-style alerts & system feed",
+    cal_sub:"Track Indian festivals and their impact on demand",
+    recommendations:"Recommendations",pl_impact:"P&L Impact",
+    dead_stock:"Dead Stock & Overstock Table",anomaly_detect:"Anomaly & Theft Detection",
+    forecast_acc:"Forecast Accuracy",waste_reduced:"Waste Reduced",profit_margin:"Profit Margin",ai_savings:"AI Savings",
+    rev_by_cat:"Revenue by Category",demand_vs_actual:"Demand vs Actual (Top 8)",
+    waste_progress:"Zero-Waste AI Progress",full_stock_status:"Full Stock Status Breakdown",
+    wa_alerts:"WhatsApp-Style Alerts",system_feed:"System Alert Feed",
+    calendar_view:"Calendar View",festival_impact:"Festival Demand Impact",
+    voice_listening:"Listening...",voice_examples:"Try: \"Show low stock\" · \"Add 20 milk\" · \"Total value\"",
+    voice_close:"Close",sell_product:"Sell Product",
+    greeting_morning:"Good morning",greeting_afternoon:"Good afternoon",greeting_evening:"Good evening",
+    subtitle:"AI-Powered Smart Retail OS for SMEs",
+  },
+  hi: {
+    nav_dashboard:"डैशबोर्ड",nav_inventory:"इन्वेंटरी",nav_forecast:"पूर्वानुमान",
+    nav_doctor:"AI डॉक्टर",nav_analytics:"विश्लेषण",nav_alerts:"अलर्ट",nav_calendar:"त्योहार कैलेंडर",
+    m_skus:"कुल SKU",m_rev:"अनुमानित राजस्व",m_expiry:"एक्सपायरी जोखिम",m_low:"कम स्टॉक",
+    today_sales:"आज की बिक्री और वर्तमान स्टॉक",
+    th_product:"उत्पाद",th_category:"श्रेणी",th_qty:"मात्रा",th_price:"मूल्य ₹",
+    th_expiry_h:"समाप्ति",th_supplier:"आपूर्तिकर्ता",th_reorder_pt:"पुनः-ऑर्डर बिंदु",
+    th_safety_buffer:"सुरक्षा बफर",th_days_left:"दिन बाकी",th_sold_today:"आज बिके",
+    th_status:"स्थिति",th_action:"क्रियाएं",th_current_stock:"वर्तमान स्टॉक",
+    stock_health:"स्टॉक स्वास्थ्य",sales_trend:"7-दिन बिक्री ट्रेंड",
+    seasonal_intel:"मौसमी जानकारी",barcode_lookup:"उत्पाद खोज",
+    add_item:"आइटम जोड़ें",add_new_item:"नया आइटम जोड़ें",btn_save:"सहेजें",
+    export_csv:"CSV निर्यात",upload_csv:"CSV अपलोड",
+    f_name:"उत्पाद का नाम",f_qty:"मात्रा",f_price:"मूल्य (₹)",f_expiry:"समाप्ति तिथि",
+    f_supplier:"आपूर्तिकर्ता",f_category:"श्रेणी",f_minqty:"न्यूनतम मात्रा",f_lead:"लीड दिन",
+    f_select_product:"उत्पाद चुनें",f_period:"पूर्वानुमान अवधि",f_date:"तारीख चुनें",f_festival_impact:"त्योहार प्रभाव",
+    forecast_chart:"AI पूर्वानुमान चार्ट",hist_chart:"पिछले 30 दिन — वास्तविक बनाम पूर्वानुमान",
+    inv_sub:"उत्पाद प्रबंधित करें, स्टॉक जोड़ें",
+    forecast_sub:"मौसम, त्योहार और IPL के साथ AI पूर्वानुमान",
+    doctor_sub:"बुद्धिमान सिफारिशें और विश्लेषण",
+    analytics_sub:"प्रदर्शन अंतर्दृष्टि और श्रेणी विश्लेषण",
+    alerts_sub:"व्हाट्सएप-शैली अलर्ट",
+    cal_sub:"भारतीय त्योहार और मांग पर उनका प्रभाव",
+    recommendations:"सिफारिशें",pl_impact:"लाभ-हानि प्रभाव",
+    dead_stock:"डेड स्टॉक तालिका",anomaly_detect:"विसंगति और चोरी पहचान",
+    forecast_acc:"पूर्वानुमान सटीकता",waste_reduced:"बर्बादी कम हुई",profit_margin:"लाभ मार्जिन",ai_savings:"AI बचत",
+    rev_by_cat:"श्रेणी द्वारा राजस्व",demand_vs_actual:"मांग बनाम वास्तविक",
+    waste_progress:"शून्य-बर्बादी प्रगति",full_stock_status:"पूर्ण स्टॉक स्थिति",
+    wa_alerts:"व्हाट्सएप अलर्ट",system_feed:"सिस्टम अलर्ट फ़ीड",
+    calendar_view:"कैलेंडर दृश्य",festival_impact:"त्योहार मांग प्रभाव",
+    voice_listening:"सुन रहा हूं...",voice_examples:"कहें: \"कम स्टॉक दिखाओ\" · \"20 दूध जोड़ो\"",
+    voice_close:"बंद करें",sell_product:"उत्पाद बेचें",
+    greeting_morning:"सुप्रभात",greeting_afternoon:"नमस्ते",greeting_evening:"शुभ संध्या",
+    subtitle:"SME के लिए AI-संचालित स्मार्ट रिटेल OS",
+  },
+  kn: {
+    nav_dashboard:"ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",nav_inventory:"ಇನ್ವೆಂಟರಿ",nav_forecast:"ಮುನ್ಸೂಚನೆ",
+    nav_doctor:"AI ಡಾಕ್ಟರ್",nav_analytics:"ವಿಶ್ಲೇಷಣೆ",nav_alerts:"ಎಚ್ಚರಿಕೆಗಳು",nav_calendar:"ಹಬ್ಬದ ದಿನಾಂಕಪತ್ರ",
+    m_skus:"ಒಟ್ಟು SKU",m_rev:"ಅಂದಾಜು ಆದಾಯ",m_expiry:"ಮುಕ್ತಾಯ ಅಪಾಯ",m_low:"ಕಡಿಮೆ ಸ್ಟಾಕ್",
+    today_sales:"ಇಂದಿನ ಮಾರಾಟ ಮತ್ತು ಪ್ರಸ್ತುತ ಸ್ಟಾಕ್",
+    th_product:"ಉತ್ಪನ್ನ",th_category:"ವರ್ಗ",th_qty:"ಪ್ರಮಾಣ",th_price:"ಬೆಲೆ ₹",
+    th_expiry_h:"ಮುಕ್ತಾಯ",th_supplier:"ಪೂರೈಕೆದಾರ",th_reorder_pt:"ಮರು-ಆರ್ಡರ್ ಬಿಂದು",
+    th_safety_buffer:"ಸುರಕ್ಷಾ ಬಫರ್",th_days_left:"ದಿನಗಳು ಉಳಿದಿವೆ",th_sold_today:"ಇಂದು ಮಾರಾಟ",
+    th_status:"ಸ್ಥಿತಿ",th_action:"ಕ್ರಿಯೆಗಳು",th_current_stock:"ಪ್ರಸ್ತುತ ಸ್ಟಾಕ್",
+    stock_health:"ಸ್ಟಾಕ್ ಆರೋಗ್ಯ",sales_trend:"7-ದಿನ ಮಾರಾಟ ಪ್ರವೃತ್ತಿ",
+    seasonal_intel:"ಕಾಲೋಚಿತ ಜ್ಞಾನ",barcode_lookup:"ಉತ್ಪನ್ನ ಹುಡುಕಾಟ",
+    add_item:"ಐಟಂ ಸೇರಿಸಿ",add_new_item:"ಹೊಸ ಐಟಂ",btn_save:"ಉಳಿಸಿ",
+    export_csv:"CSV ರಫ್ತು",upload_csv:"CSV ಅಪ್‌ಲೋಡ್",
+    f_name:"ಉತ್ಪನ್ನ ಹೆಸರು",f_qty:"ಪ್ರಮಾಣ",f_price:"ಬೆಲೆ (₹)",f_expiry:"ಮುಕ್ತಾಯ ದಿನಾಂಕ",
+    f_supplier:"ಪೂರೈಕೆದಾರ",f_category:"ವರ್ಗ",f_minqty:"ಕನಿಷ್ಠ ಪ್ರಮಾಣ",f_lead:"ಲೀಡ್ ದಿನಗಳು",
+    f_select_product:"ಉತ್ಪನ್ನ ಆಯ್ಕೆಮಾಡಿ",f_period:"ಮುನ್ಸೂಚನೆ ಅವಧಿ",f_date:"ದಿನಾಂಕ ಆಯ್ಕೆ",f_festival_impact:"ಹಬ್ಬದ ಪ್ರಭಾವ",
+    forecast_chart:"AI ಮುನ್ಸೂಚನೆ ಚಾರ್ಟ್",hist_chart:"ಕಳೆದ 30 ದಿನ — ವಾಸ್ತವ vs ಮುನ್ಸೂಚನೆ",
+    inv_sub:"ಉತ್ಪನ್ನಗಳನ್ನು ನಿರ್ವಹಿಸಿ",forecast_sub:"ಮೌಸಮ, ಹಬ್ಬ ಮತ್ತು IPL ಪ್ರಭಾವ",
+    doctor_sub:"ಬುದ್ಧಿವಂತ ಶಿಫಾರಸುಗಳು",analytics_sub:"ಕಾರ್ಯಕ್ಷಮತೆ ಒಳನೋಟ",
+    alerts_sub:"ವಾಟ್ಸ್‌ಆಪ್ ಶೈಲಿ ಎಚ್ಚರಿಕೆಗಳು",cal_sub:"ಭಾರತೀಯ ಹಬ್ಬಗಳ ಪ್ರಭಾವ",
+    recommendations:"ಶಿಫಾರಸುಗಳು",pl_impact:"ಲಾಭ-ನಷ್ಟ ಪ್ರಭಾವ",
+    dead_stock:"ಡೆಡ್ ಸ್ಟಾಕ್ ಕೋಷ್ಟಕ",anomaly_detect:"ವಿಸಂಗತಿ ಪತ್ತೆ",
+    forecast_acc:"ಮುನ್ಸೂಚನೆ ನಿಖರತೆ",waste_reduced:"ತ್ಯಾಜ್ಯ ಕಡಿಮೆ",profit_margin:"ಲಾಭ ಮಾರ್ಜಿನ್",ai_savings:"AI ಉಳಿತಾಯ",
+    rev_by_cat:"ವರ್ಗದ ಪ್ರಕಾರ ಆದಾಯ",demand_vs_actual:"ಬೇಡಿಕೆ vs ವಾಸ್ತವ",
+    waste_progress:"ಶೂನ್ಯ-ತ್ಯಾಜ್ಯ ಪ್ರಗತಿ",full_stock_status:"ಸಂಪೂರ್ಣ ಸ್ಟಾಕ್ ಸ್ಥಿತಿ",
+    wa_alerts:"ವಾಟ್ಸ್‌ಆಪ್ ಎಚ್ಚರಿಕೆಗಳು",system_feed:"ಸಿಸ್ಟಂ ಎಚ್ಚರಿಕೆ",
+    calendar_view:"ಕ್ಯಾಲೆಂಡರ್",festival_impact:"ಹಬ್ಬದ ಬೇಡಿಕೆ ಪ್ರಭಾವ",
+    voice_listening:"ಕೇಳುತ್ತಿದ್ದೇನೆ...",voice_examples:"ಹೇಳಿ: \"ಕಡಿಮೆ ಸ್ಟಾಕ್ ತೋರಿಸು\"",
+    voice_close:"ಮುಚ್ಚಿ",sell_product:"ಉತ್ಪನ್ನ ಮಾರಾಟ",
+    greeting_morning:"ಶುಭೋದಯ",greeting_afternoon:"ನಮಸ್ಕಾರ",greeting_evening:"ಶುಭ ಸಂಜೆ",
+    subtitle:"SME ಗಳಿಗಾಗಿ AI-ಚಾಲಿತ ಸ್ಮಾರ್ಟ್ ರಿಟೇಲ್ OS",
+  },
+  te: {
+    nav_dashboard:"డాష్‌బోర్డ్",nav_inventory:"జాబితా",nav_forecast:"అంచనా",
+    nav_doctor:"AI డాక్టర్",nav_analytics:"విశ్లేషణ",nav_alerts:"హెచ్చరికలు",nav_calendar:"పండుగ క్యాలెండర్",
+    m_skus:"మొత్తం SKUలు",m_rev:"అంచనా ఆదాయం",m_expiry:"గడువు ముగింపు ప్రమాదం",m_low:"తక్కువ స్టాక్",
+    today_sales:"నేటి అమ్మకాలు & ప్రస్తుత స్టాక్",
+    th_product:"ఉత్పత్తి",th_category:"వర్గం",th_qty:"పరిమాణం",th_price:"ధర ₹",
+    th_expiry_h:"గడువు",th_supplier:"సరఫరాదారు",th_reorder_pt:"పున:ఆర్డర్ పాయింట్",
+    th_safety_buffer:"భద్రత బఫర్",th_days_left:"రోజులు మిగిలాయి",th_sold_today:"నేడు అమ్మారు",
+    th_status:"స్థితి",th_action:"చర్యలు",th_current_stock:"ప్రస్తుత స్టాక్",
+    stock_health:"స్టాక్ ఆరోగ్యం",sales_trend:"7-రోజుల అమ్మకాల ట్రెండ్",
+    seasonal_intel:"కాలానుగుణ సమాచారం",barcode_lookup:"ఉత్పత్తి శోధన",
+    add_item:"అంశం జోడించు",add_new_item:"కొత్త అంశం",btn_save:"సేవ్ చేయి",
+    export_csv:"CSV ఎగుమతి",upload_csv:"CSV అప్‌లోడ్",
+    f_name:"ఉత్పత్తి పేరు",f_qty:"పరిమాణం",f_price:"ధర (₹)",f_expiry:"గడువు తేదీ",
+    f_supplier:"సరఫరాదారు",f_category:"వర్గం",f_minqty:"కనీస పరిమాణం",f_lead:"లీడ్ రోజులు",
+    f_select_product:"ఉత్పత్తి ఎంచుకోండి",f_period:"అంచనా వ్యవధి",f_date:"తేదీ ఎంచుకోండి",f_festival_impact:"పండుగ ప్రభావం",
+    forecast_chart:"AI అంచనా చార్ట్",hist_chart:"గత 30 రోజులు — వాస్తవ vs అంచనా",
+    inv_sub:"ఉత్పత్తులను నిర్వహించండి",forecast_sub:"సీజన్, పండుగ & IPL తో AI అంచనా",
+    doctor_sub:"తెలివైన సిఫార్సులు",analytics_sub:"పనితీరు అంతర్దృష్టులు",
+    alerts_sub:"వాట్సాప్-శైలి హెచ్చరికలు",cal_sub:"భారతీయ పండుగలు & వాటి ప్రభావం",
+    recommendations:"సిఫార్సులు",pl_impact:"లాభ-నష్ట ప్రభావం",
+    dead_stock:"డెడ్ స్టాక్ పట్టిక",anomaly_detect:"అసాధారణ గుర్తింపు",
+    forecast_acc:"అంచనా ఖచ్చితత్వం",waste_reduced:"వ్యర్థం తగ్గింది",profit_margin:"లాభం మార్జిన్",ai_savings:"AI ఆదా",
+    rev_by_cat:"వర్గం ప్రకారం ఆదాయం",demand_vs_actual:"డిమాండ్ vs వాస్తవం",
+    waste_progress:"జీరో-వేస్ట్ పురోగతి",full_stock_status:"పూర్తి స్టాక్ స్థితి",
+    wa_alerts:"వాట్సాప్ హెచ్చరికలు",system_feed:"సిస్టమ్ అలర్ట్",
+    calendar_view:"క్యాలెండర్ వీక్షణ",festival_impact:"పండుగ డిమాండ్ ప్రభావం",
+    voice_listening:"వింటున్నాను...",voice_examples:"చెప్పండి: \"తక్కువ స్టాక్ చూపించు\"",
+    voice_close:"మూసివేయి",sell_product:"ఉత్పత్తి అమ్ముము",
+    greeting_morning:"శుభోదయం",greeting_afternoon:"నమస్కారం",greeting_evening:"శుభ సాయంత్రం",
+    subtitle:"SMEల కోసం AI-ఆధారిత స్మార్ట్ రిటైల్ OS",
+  },
+  ta: {
+    nav_dashboard:"டாஷ்போர்டு",nav_inventory:"சரக்கு",nav_forecast:"கணிப்பு",
+    nav_doctor:"AI மருத்துவர்",nav_analytics:"பகுப்பாய்வு",nav_alerts:"எச்சரிக்கைகள்",nav_calendar:"திருவிழா நாட்காட்டி",
+    m_skus:"மொத்த SKUகள்",m_rev:"மதிப்பிட்ட வருமானம்",m_expiry:"காலாவதி ஆபத்து",m_low:"குறைந்த இருப்பு",
+    today_sales:"இன்றைய விற்பனை & தற்போதைய இருப்பு",
+    th_product:"தயாரிப்பு",th_category:"வகை",th_qty:"அளவு",th_price:"விலை ₹",
+    th_expiry_h:"காலாவதி",th_supplier:"சப்ளையர்",th_reorder_pt:"மறுஆர்டர் புள்ளி",
+    th_safety_buffer:"பாதுகாப்பு இடையகம்",th_days_left:"நாட்கள் மீதம்",th_sold_today:"இன்று விற்றது",
+    th_status:"நிலை",th_action:"செயல்கள்",th_current_stock:"தற்போதைய இருப்பு",
+    stock_health:"இருப்பு ஆரோக்கியம்",sales_trend:"7-நாள் விற்பனை போக்கு",
+    seasonal_intel:"பருவகால நுண்ணறிவு",barcode_lookup:"தயாரிப்பு தேடல்",
+    add_item:"பொருள் சேர்க்கவும்",add_new_item:"புதிய பொருள்",btn_save:"சேமி",
+    export_csv:"CSV ஏற்றுமதி",upload_csv:"CSV பதிவேற்றம்",
+    f_name:"தயாரிப்பு பெயர்",f_qty:"அளவு",f_price:"விலை (₹)",f_expiry:"காலாவதி தேதி",
+    f_supplier:"சப்ளையர்",f_category:"வகை",f_minqty:"குறைந்தபட்ச அளவு",f_lead:"முன்னணி நாட்கள்",
+    f_select_product:"தயாரிப்பு தேர்வு",f_period:"கணிப்பு காலம்",f_date:"தேதி தேர்வு",f_festival_impact:"திருவிழா தாக்கம்",
+    forecast_chart:"AI கணிப்பு விளக்கப்படம்",hist_chart:"கடந்த 30 நாட்கள் — உண்மை vs கணிப்பு",
+    inv_sub:"தயாரிப்புகளை நிர்வகிக்கவும்",forecast_sub:"பருவம், திருவிழா & IPL கணிப்பு",
+    doctor_sub:"நுண்ணிய பரிந்துரைகள்",analytics_sub:"செயல்திறன் நுண்ணறிவு",
+    alerts_sub:"வாட்ஸ்ஆப் பாணி எச்சரிக்கைகள்",cal_sub:"இந்திய திருவிழாக்கள் & தாக்கம்",
+    recommendations:"பரிந்துரைகள்",pl_impact:"லாப-நஷ்ட தாக்கம்",
+    dead_stock:"டெட் ஸ்டாக் அட்டவணை",anomaly_detect:"முரண்பாடு கண்டறிதல்",
+    forecast_acc:"கணிப்பு துல்லியம்",waste_reduced:"கழிவு குறைந்தது",profit_margin:"லாப விகிதம்",ai_savings:"AI சேமிப்பு",
+    rev_by_cat:"வகையின்படி வருமானம்",demand_vs_actual:"தேவை vs உண்மை",
+    waste_progress:"பூஜ்ய-கழிவு முன்னேற்றம்",full_stock_status:"முழு இருப்பு நிலை",
+    wa_alerts:"வாட்ஸ்ஆப் எச்சரிக்கைகள்",system_feed:"கணினி எச்சரிக்கை",
+    calendar_view:"நாட்காட்டி காட்சி",festival_impact:"திருவிழா தேவை தாக்கம்",
+    voice_listening:"கேட்கிறேன்...",voice_examples:"சொல்லுங்கள்: \"குறைந்த இருப்பு காட்டு\"",
+    voice_close:"மூடு",sell_product:"தயாரிப்பு விற்கவும்",
+    greeting_morning:"காலை வணக்கம்",greeting_afternoon:"மதிய வணக்கம்",greeting_evening:"மாலை வணக்கம்",
+    subtitle:"SMEகளுக்கான AI-இயங்கும் ஸ்மார்ட் ரீடெயில் OS",
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+let inventory = [
+  {id:1,product_name:"Rice 5kg",quantity:42,price:250,expiry_date:"2026-08-15",supplier:"Agro Foods",min_qty:20,lead_days:3,category:"Grains",sold_today:0},
+  {id:2,product_name:"Milk Packets",quantity:8,price:60,expiry_date:"2026-04-10",supplier:"Amul Dairy",min_qty:15,lead_days:1,category:"Dairy",sold_today:4},
+  {id:3,product_name:"Bread",quantity:5,price:45,expiry_date:"2026-04-08",supplier:"Modern Bakery",min_qty:10,lead_days:1,category:"Bakery",sold_today:6},
+  {id:4,product_name:"Cold Drink 2L",quantity:85,price:80,expiry_date:"2026-12-31",supplier:"Beverage Co",min_qty:30,lead_days:5,category:"Beverages",sold_today:12},
+  {id:5,product_name:"Sugar 1kg",quantity:60,price:55,expiry_date:"2027-01-01",supplier:"Sugar Mills",min_qty:25,lead_days:4,category:"Grains",sold_today:2},
+  {id:6,product_name:"Biscuits Pk",quantity:3,price:30,expiry_date:"2026-04-09",supplier:"Bakery Ltd",min_qty:20,lead_days:2,category:"Bakery",sold_today:8},
+  {id:7,product_name:"Cooking Oil 1L",quantity:28,price:175,expiry_date:"2026-10-20",supplier:"Fortune",min_qty:15,lead_days:3,category:"Household",sold_today:3},
+  {id:8,product_name:"Tea 500g",quantity:45,price:220,expiry_date:"2026-11-30",supplier:"Tata Tea",min_qty:10,lead_days:5,category:"Beverages",sold_today:5},
+  {id:9,product_name:"Pulses 1kg",quantity:70,price:130,expiry_date:"2027-03-01",supplier:"Dal Mill",min_qty:20,lead_days:4,category:"Grains",sold_today:1},
+  {id:10,product_name:"Soap Bar",quantity:120,price:35,expiry_date:"2027-06-01",supplier:"HUL",min_qty:30,lead_days:7,category:"Household",sold_today:0},
+  {id:11,product_name:"Shampoo 200ml",quantity:15,price:180,expiry_date:"2026-09-15",supplier:"HUL",min_qty:10,lead_days:5,category:"Household",sold_today:2},
+  {id:12,product_name:"Tomato Sauce",quantity:22,price:95,expiry_date:"2026-06-30",supplier:"Kissan",min_qty:8,lead_days:3,category:"Condiments",sold_today:3},
+  {id:13,product_name:"Wheat Flour 1kg",quantity:55,price:45,expiry_date:"2026-09-01",supplier:"Aashirvaad",min_qty:25,lead_days:3,category:"Grains",sold_today:4},
+  {id:14,product_name:"Butter 100g",quantity:12,price:55,expiry_date:"2026-05-20",supplier:"Amul Dairy",min_qty:10,lead_days:2,category:"Dairy",sold_today:5},
+  {id:15,product_name:"Cheese Slice",quantity:6,price:120,expiry_date:"2026-04-15",supplier:"Amul Dairy",min_qty:8,lead_days:2,category:"Dairy",sold_today:3},
+  {id:16,product_name:"Chips Large",quantity:40,price:30,expiry_date:"2026-07-01",supplier:"Lays",min_qty:20,lead_days:4,category:"Snacks",sold_today:15},
+  {id:17,product_name:"Noodles Pk",quantity:65,price:15,expiry_date:"2026-11-01",supplier:"Maggi",min_qty:30,lead_days:5,category:"Snacks",sold_today:7},
+  {id:18,product_name:"Coconut Oil 1L",quantity:18,price:180,expiry_date:"2026-12-01",supplier:"Parachute",min_qty:10,lead_days:4,category:"Household",sold_today:1},
+  {id:19,product_name:"Coffee 200g",quantity:25,price:320,expiry_date:"2026-10-01",supplier:"Nescafe",min_qty:8,lead_days:5,category:"Beverages",sold_today:6},
+  {id:20,product_name:"Mineral Water",quantity:90,price:20,expiry_date:"2026-08-01",supplier:"Bisleri",min_qty:40,lead_days:2,category:"Beverages",sold_today:20},
+  {id:21,product_name:"Eggs (12 pack)",quantity:14,price:80,expiry_date:"2026-04-12",supplier:"Local Farm",min_qty:10,lead_days:1,category:"Dairy",sold_today:8},
+  {id:22,product_name:"Honey 500g",quantity:9,price:350,expiry_date:"2027-02-01",supplier:"Dabur",min_qty:5,lead_days:6,category:"Condiments",sold_today:1},
+  {id:23,product_name:"Ketchup 500ml",quantity:30,price:85,expiry_date:"2026-09-15",supplier:"Heinz",min_qty:10,lead_days:3,category:"Condiments",sold_today:4},
+  {id:24,product_name:"Cornflakes 500g",quantity:20,price:220,expiry_date:"2026-12-01",supplier:"Kelloggs",min_qty:8,lead_days:5,category:"Snacks",sold_today:3},
+];
+
+let nextId = inventory.length + 1;
+
+// Chat messages
+let chatMsgs = [
+  {text:"🔴 Stock low: Bread (5 units left)",sent:false,time:"09:12"},
+  {text:"⚠️ Milk Packets expiring in 4 days",sent:false,time:"09:15"},
+  {text:"📦 Reorder placed for Rice 5kg ✅",sent:true,time:"09:16"},
+];
+
+// Indian Festivals 2025-2026
+const FESTIVALS = [
+  {name:"Makar Sankranti",date:"2026-01-14",boost:{Sweets:1.6,Sesame:1.8,Beverages:1.2},icon:"🪁"},
+  {name:"Republic Day",date:"2026-01-26",boost:{Snacks:1.3,Beverages:1.3},icon:"🇮🇳"},
+  {name:"Maha Shivaratri",date:"2026-02-17",boost:{Dairy:1.4,Fruits:1.5},icon:"🔱"},
+  {name:"Holi",date:"2026-03-14",boost:{Beverages:1.7,Snacks:1.6,Dairy:1.4,Confectionery:1.8},icon:"🎨"},
+  {name:"Ugadi / Gudi Padwa",date:"2026-03-19",boost:{Grains:1.5,Dairy:1.4,Condiments:1.3},icon:"🌸"},
+  {name:"Ram Navami",date:"2026-03-28",boost:{Grains:1.3,Dairy:1.3},icon:"🙏"},
+  {name:"Baisakhi",date:"2026-04-14",boost:{Grains:1.4,Beverages:1.3,Snacks:1.2},icon:"🌾"},
+  {name:"Eid ul-Fitr",date:"2026-04-19",boost:{Bakery:1.8,Dairy:1.5,Beverages:1.4,Snacks:1.6},icon:"🌙"},
+  {name:"IPL Final (est.)",date:"2026-05-30",boost:{Beverages:1.9,Snacks:2.0},icon:"🏏"},
+  {name:"Eid ul-Adha",date:"2026-06-26",boost:{Grains:1.5,Condiments:1.4},icon:"🌙"},
+  {name:"Independence Day",date:"2026-08-15",boost:{Beverages:1.3,Snacks:1.3},icon:"🇮🇳"},
+  {name:"Onam",date:"2026-08-22",boost:{Grains:1.5,Beverages:1.4,Dairy:1.3},icon:"🌺"},
+  {name:"Ganesh Chaturthi",date:"2026-08-24",boost:{Sweets:1.9,Dairy:1.6,Grains:1.4},icon:"🐘"},
+  {name:"Navratri",date:"2026-10-01",boost:{Dairy:1.6,Beverages:1.3,Grains:1.2},icon:"🎶"},
+  {name:"Dussehra",date:"2026-10-10",boost:{Snacks:1.5,Beverages:1.4},icon:"⚔️"},
+  {name:"Diwali",date:"2026-10-19",boost:{Snacks:2.0,Beverages:1.8,Dairy:1.7,Household:1.5,Condiments:1.4},icon:"🪔"},
+  {name:"Dhanteras",date:"2026-10-17",boost:{Household:2.0,Snacks:1.5},icon:"💰"},
+  {name:"Chhath Puja",date:"2026-10-28",boost:{Grains:1.5,Dairy:1.4},icon:"🌅"},
+  {name:"Pongal",date:"2026-01-14",boost:{Grains:1.7,Dairy:1.5},icon:"🌾"},
+  {name:"Guru Nanak Jayanti",date:"2026-11-05",boost:{Grains:1.3,Dairy:1.3},icon:"🙏"},
+  {name:"Christmas",date:"2026-12-25",boost:{Bakery:1.8,Beverages:1.5,Dairy:1.4},icon:"🎄"},
+];
+
+// Seasons
+const SEASONS = {
+  3:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
+  4:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
+  5:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
+  6:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
+  7:{name:"Monsoon 🌧️",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:1.2,Snacks:1.35,Dairy:1.0,Grains:1.1,Household:1.0,Condiments:1.05,Bakery:1.1}},
+  8:{name:"Monsoon 🌧️",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:1.2,Snacks:1.35,Dairy:1.0,Grains:1.1,Household:1.0,Condiments:1.05,Bakery:1.1}},
+  9:{name:"Monsoon 🌧️",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:1.2,Snacks:1.35,Dairy:1.0,Grains:1.1,Household:1.0,Condiments:1.05,Bakery:1.1}},
+  10:{name:"Festival 🎉",icon:"🎉",tip:"Sweets, snacks & beverages peak for festivals",boost:{Beverages:1.3,Snacks:1.55,Dairy:1.2,Grains:1.15,Household:1.25,Condiments:1.3,Bakery:1.4}},
+  11:{name:"Festival 🎉",icon:"🎉",tip:"Sweets, snacks & beverages peak for festivals",boost:{Beverages:1.3,Snacks:1.55,Dairy:1.2,Grains:1.15,Household:1.25,Condiments:1.3,Bakery:1.4}},
+  12:{name:"Winter ❄️",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:1.35,Snacks:1.1,Dairy:1.1,Grains:1.05,Household:1.0,Condiments:1.0,Bakery:1.05}},
+  1:{name:"Winter ❄️",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:1.35,Snacks:1.1,Dairy:1.1,Grains:1.05,Household:1.0,Condiments:1.0,Bakery:1.05}},
+  2:{name:"Winter ❄️",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:1.35,Snacks:1.1,Dairy:1.1,Grains:1.05,Household:1.0,Condiments:1.0,Bakery:1.05}},
+};
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+let currentLang = 'en';
+let isDark = true;
+let currentPage = 'dashboard';
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let charts = {};
+
+function t(key) { return (LANG[currentLang] || LANG.en)[key] || key; }
+
+function getDaysLeft(dateStr) {
+  if (!dateStr) return 999;
+  try {
+    const d = new Date(dateStr);
+    const diff = Math.floor((d - new Date()) / 86400000);
+    return diff;
+  } catch(e){ return 999; }
+}
+
+function getSafetyBuffer(item) {
+  return Math.round(item.min_qty * 0.5);
+}
+
+function getReorderPoint(item) {
+  const safetyBuffer = getSafetyBuffer(item);
+  const avgDailyDemand = Math.max(1, Math.round(item.quantity * 0.05));
+  return item.min_qty + safetyBuffer + (item.lead_days * avgDailyDemand);
+}
+
+function getStatus(item) {
+  const days = getDaysLeft(item.expiry_date);
+  const qty = item.quantity;
+  const rp = getReorderPoint(item);
+  if (days <= 0) return ['Expired','s-exp'];
+  if (days <= 7) return ['Expiry Risk','s-exp'];
+  if (qty === 0) return ['Out of Stock','s-exp'];
+  if (qty <= item.min_qty) return ['Low Stock','s-low'];
+  if (qty > rp * 3) return ['Overstock','s-over'];
+  return ['OK','s-ok'];
+}
+
+function getSeason(month) {
+  return SEASONS[month || new Date().getMonth()+1];
+}
+
+function getFestivalOnDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const within7 = FESTIVALS.filter(f => {
+    const fd = new Date(f.date);
+    const diff = Math.abs(fd - d) / 86400000;
+    return diff <= 3;
+  });
+  return within7.length ? within7[0] : null;
+}
+
+function getNextFestival() {
+  const now = new Date();
+  const upcoming = FESTIVALS
+    .filter(f => new Date(f.date) >= now)
+    .sort((a,b) => new Date(a.date)-new Date(b.date));
+  return upcoming[0] || null;
+}
+
+function isIPLSeason() {
+  const m = new Date().getMonth()+1;
+  return m >= 3 && m <= 5;
+}
+
+function seededRand(seed, i) {
+  const x = Math.sin(seed + i) * 10000;
+  return x - Math.floor(x);
+}
+
+function generateForecast(item, days, festivalDate) {
+  const season = getSeason();
+  const seasonBoost = season.boost[item.category] || 1.0;
+  const base = Math.max(3, Math.round(item.quantity * 0.08));
+  const seed = item.product_name.split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 100;
+  
+  const dates=[], vals=[], lower=[], upper=[];
+  for(let i=0;i<days;i++){
+    const d = new Date(); d.setDate(d.getDate()+i);
+    const weekendBoost = d.getDay()===0||d.getDay()===6 ? 1.3 : 1.0;
+    const iplBoost = isIPLSeason() && (d.getDay()===5||d.getDay()===6||d.getDay()===0) ? 1.2 : 1.0;
+    const festBoost = festivalDate ? (() => {
+      const fd = new Date(festivalDate);
+      const diff = Math.abs(fd - d) / 86400000;
+      return diff <= 3 ? 1.5 : 1.0;
+    })() : 1.0;
+    const noise = (seededRand(seed,i) - 0.5) * base * 0.3;
+    const val = Math.max(0, Math.round(base * seasonBoost * weekendBoost * iplBoost * festBoost + noise));
+    dates.push(d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+    vals.push(val);
+    lower.push(Math.max(0, Math.round(val*0.8)));
+    upper.push(Math.round(val*1.2));
+  }
+  
+  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+  const peak = Math.max(...vals);
+  const total = vals.reduce((a,b)=>a+b,0);
+  const daysOfStock = avg>0 ? Math.round(item.quantity/avg) : 99;
+  return {dates,vals,lower,upper,avg:Math.round(avg*10)/10,peak,total,daysOfStock,seasonBoost:Math.round((seasonBoost-1)*100),season};
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LANGUAGE
+// ═══════════════════════════════════════════════════════════════
+function applyLang() {
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.getAttribute('data-t');
+    el.textContent = t(key);
+  });
+  // Update sidebar brand
+  const subEl = document.getElementById('sb-sub');
+  if(subEl) subEl.textContent = t('subtitle');
+}
+
+document.getElementById('lang-select').addEventListener('change', function(){
+  currentLang = this.value;
+  applyLang();
+  renderAll();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════════════════════════════
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.className = isDark ? '' : 'light';
+  document.getElementById('theme-btn-label').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+  renderCharts();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const page = el.dataset.page;
+    navigate(page);
+  });
+});
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page===page));
+  document.querySelectorAll('.section').forEach(el => el.classList.toggle('active', el.id==='page-'+page));
+  renderPage(page);
+}
+
+function renderPage(page) {
+  if(page==='dashboard') renderDashboard();
+  else if(page==='inventory') renderInventoryTable();
+  else if(page==='forecast') renderForecastPage();
+  else if(page==='doctor') renderDoctor();
+  else if(page==='analytics') renderAnalytics();
+  else if(page==='alerts') renderAlerts();
+  else if(page==='calendar') renderCalendar();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const hour = new Date().getHours();
+  const greet = hour<12?t('greeting_morning'):hour<17?t('greeting_afternoon'):t('greeting_evening');
+  document.getElementById('dash-title').textContent = `📊 ${t('nav_dashboard')}`;
+  document.getElementById('dash-sub').textContent = `${greet}! · ${t('subtitle')} · ${inventory.length} products tracked`;
+
+  // Badges
+  const season = getSeason();
+  document.getElementById('season-badge').textContent = season.icon + ' ' + season.name.split(' ')[0];
+  const nf = getNextFestival();
+  document.getElementById('festival-next-badge').textContent = nf ? `${nf.icon} Next: ${nf.name} (${new Date(nf.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})})` : '';
+  document.getElementById('ipl-badge').style.display = isIPLSeason() ? 'inline' : 'none';
+
+  // KPIs
+  const expiryRisk = inventory.filter(i=>getDaysLeft(i.expiry_date)>0&&getDaysLeft(i.expiry_date)<=7).length;
+  const lowStock = inventory.filter(i=>getStatus(i)[0]==='Low Stock').length;
+  const estRev = inventory.reduce((a,i)=>a+i.quantity*i.price,0);
+
+  document.getElementById('m-skus').textContent = inventory.length;
+  document.getElementById('m-skus-delta').textContent = `${lowStock} low stock`;
+  document.getElementById('m-rev').textContent = `₹${estRev.toLocaleString('en-IN')}`;
+  document.getElementById('m-expiry').textContent = expiryRisk;
+  document.getElementById('m-low').textContent = lowStock;
+
+  // Sales Today table
+  renderSalesTodayTable();
+
+  // Today badge
+  const todayStr = new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+  const fest = getFestivalOnDate(new Date().toISOString().split('T')[0]);
+  document.getElementById('today-date-badge').textContent = fest ? `${fest.icon} ${fest.name} Impact Active` : todayStr;
+  document.getElementById('today-date-badge').style.display = fest ? 'inline-block' : 'none';
+
+  // Season info
+  document.getElementById('season-info-box').innerHTML = `${season.icon} <strong>${season.name}</strong> — ${season.tip} ${isIPLSeason()?'<span class="ipl-tag">🏏 IPL +45% Beverages</span>':''}`;
+  const boostEntries = Object.entries(season.boost).map(([k,v])=>
+    `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${k}</span><span style="color:${v>1?'var(--brand)':'var(--text2)'};font-weight:600">+${Math.round((v-1)*100)}%</span></div>`
+  ).join('');
+  document.getElementById('season-boost-table').innerHTML = boostEntries;
+
+  // Expiry warnings
+  const expiring = inventory.filter(i=>getDaysLeft(i.expiry_date)>0&&getDaysLeft(i.expiry_date)<=7);
+  const ewEl = document.getElementById('expiry-warnings');
+  if(expiring.length){
+    ewEl.innerHTML = `<div class="card" style="border-left:3px solid var(--danger);margin-top:0">
+      <div class="card-title" style="color:var(--danger)">⚠️ ${expiring.length} item(s) expiring within 7 days!</div>
+      ${expiring.map(i=>`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px">
+          <span style="flex:1"><strong>${i.product_name}</strong> — ${i.quantity} units, ${getDaysLeft(i.expiry_date)} day(s) left</span>
+          <button class="btn btn-warn" onclick="applyDiscount('${i.product_name}')">🏷️ Discount</button>
+          <button class="btn btn-ghost" onclick="donatItem('${i.product_name}')">❤️ Donate</button>
+          <button class="btn btn-danger" onclick="removeItem(${i.id})">🗑️ Remove</button>
+        </div>`).join('')}
+    </div>`;
+  } else { ewEl.innerHTML=''; }
+
+  renderCharts();
+}
+
+function renderSalesTodayTable() {
+  const tbody = document.getElementById('sales-today-tbody');
+  tbody.innerHTML = inventory.slice(0,12).map(item => {
+    const [status, cls] = getStatus(item);
+    const rp = getReorderPoint(item);
+    const sb = getSafetyBuffer(item);
+    const stockPct = Math.min(100, Math.round(item.quantity/Math.max(1,rp)*100));
+    return `<tr>
+      <td><strong>${item.product_name}</strong></td>
+      <td><span style="color:var(--brand);font-family:'Space Mono',monospace;font-weight:700">${item.sold_today}</span></td>
+      <td>
+        <div style="font-weight:600;font-family:'Space Mono',monospace">${item.quantity}</div>
+        <div class="progress-bar" style="width:80px"><div class="progress-fill ${stockPct<30?'warn':''}" style="width:${stockPct}%"></div></div>
+      </td>
+      <td style="font-family:'Space Mono',monospace">${rp}</td>
+      <td style="font-family:'Space Mono',monospace">${sb}</td>
+      <td><span class="status-badge ${cls}">${status}</span></td>
+      <td>
+        <button class="btn btn-sell" style="padding:4px 8px;font-size:11px" onclick="openSell(${item.id})">💰 Sell</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════════
+const chartDefaults = () => ({
+  color: isDark ? '#8b949e' : '#64748b',
+  gridColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+  bg: isDark ? '#161b22' : '#ffffff'
+});
+
+function destroyChart(id) {
+  if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function renderCharts() {
+  if(currentPage==='dashboard') {
+    renderDonutChart();
+    renderTrendChart();
+  } else if(currentPage==='analytics') {
+    renderCatPie();
+    renderDemandBar();
+  }
+}
+
+function renderDonutChart() {
+  destroyChart('donut');
+  const counts = {OK:0,'Low Stock':0,'Expiry Risk':0,Overstock:0,Expired:0};
+  inventory.forEach(i => { const [s] = getStatus(i); counts[s]=(counts[s]||0)+1; });
+  const ctx = document.getElementById('donut-chart').getContext('2d');
+  charts['donut'] = new Chart(ctx, {
+    type:'doughnut',
+    data:{labels:Object.keys(counts),datasets:[{data:Object.values(counts),backgroundColor:['#00c896','#f59e0b','#ef4444','#0ea5e9','#8b5cf6'],borderWidth:0}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:chartDefaults().color,font:{size:11}}}},cutout:'60%'}
+  });
+}
+
+function renderTrendChart() {
+  destroyChart('trend');
+  const days = Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);return d.toLocaleDateString('en-IN',{weekday:'short'})});
+  const sales = [8200,9400,7800,11200,10500,13800,9600];
+  const fcast = [8500,9200,8100,10800,11000,13200,10200];
+  const ctx = document.getElementById('trend-chart').getContext('2d');
+  const g = ctx.createLinearGradient(0,0,0,200);
+  g.addColorStop(0,'rgba(0,200,150,0.3)');g.addColorStop(1,'rgba(0,200,150,0)');
+  charts['trend'] = new Chart(ctx,{
+    type:'line',
+    data:{labels:days,datasets:[
+      {label:'Actual',data:sales,borderColor:'#00c896',backgroundColor:g,fill:true,tension:.4,pointRadius:4},
+      {label:'Forecast',data:fcast,borderColor:'#f59e0b',borderDash:[5,5],fill:false,tension:.4,pointRadius:3}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:chartDefaults().color,font:{size:11}}}},
+      scales:{x:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}},
+              y:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}}}}
+  });
+}
+
+function renderCatPie() {
+  destroyChart('catpie');
+  const catRev = {};
+  inventory.forEach(i=>{catRev[i.category]=(catRev[i.category]||0)+i.quantity*i.price;});
+  const ctx = document.getElementById('cat-pie').getContext('2d');
+  charts['catpie'] = new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:Object.keys(catRev),datasets:[{data:Object.values(catRev),backgroundColor:['#00c896','#0ea5e9','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'],borderWidth:0}]},
+    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:chartDefaults().color,font:{size:11}}}},cutout:'50%'}
+  });
+}
+
+function renderDemandBar() {
+  destroyChart('dembar');
+  const top8 = inventory.slice(0,8);
+  const names = top8.map(i=>i.product_name.split(' ')[0]);
+  const actual = top8.map(i=>i.quantity);
+  const forecast = top8.map(i=>Math.round(i.quantity*1.1));
+  const ctx = document.getElementById('demand-bar').getContext('2d');
+  charts['dembar'] = new Chart(ctx,{
+    type:'bar',
+    data:{labels:names,datasets:[
+      {label:'Forecasted',data:forecast,backgroundColor:'rgba(0,200,150,0.7)'},
+      {label:'Actual',data:actual,backgroundColor:'rgba(14,165,233,0.7)'}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:chartDefaults().color,font:{size:11}}}},
+      scales:{x:{ticks:{color:chartDefaults().color,maxRotation:30},grid:{color:chartDefaults().gridColor}},
+              y:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INVENTORY TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderInventoryTable() {
+  const search = (document.getElementById('inv-search')?.value||'').toLowerCase();
+  const filtered = search ? inventory.filter(i=>i.product_name.toLowerCase().includes(search)||i.supplier.toLowerCase().includes(search)) : inventory;
+  const tbody = document.getElementById('inv-tbody');
+  tbody.innerHTML = filtered.map(item=>{
+    const [status,cls] = getStatus(item);
+    const days = getDaysLeft(item.expiry_date);
+    const rp = getReorderPoint(item);
+    const sb = getSafetyBuffer(item);
+    return `<tr>
+      <td><strong>${item.product_name}</strong></td>
+      <td><span class="status-badge" style="background:var(--bg3)">${item.category}</span></td>
+      <td style="font-family:'Space Mono',monospace">${item.quantity}</td>
+      <td style="font-family:'Space Mono',monospace">₹${item.price}</td>
+      <td style="font-size:11px">${item.expiry_date}</td>
+      <td style="font-size:11px">${item.supplier}</td>
+      <td style="font-family:'Space Mono',monospace">${rp}</td>
+      <td style="font-family:'Space Mono',monospace">${sb}</td>
+      <td style="font-family:'Space Mono',monospace;color:${days<7?'var(--danger)':days<30?'var(--warn)':'var(--brand)'}">${days}</td>
+      <td style="font-family:'Space Mono',monospace;color:var(--brand)">${item.sold_today}</td>
+      <td><span class="status-badge ${cls}">${status}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-sell" style="padding:3px 7px;font-size:10px" onclick="openSell(${item.id})">💰</button>
+        <button class="btn btn-danger" style="padding:3px 7px;font-size:10px" onclick="removeItem(${item.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  populateFcProduct();
+}
+
+function openAddForm() {
+  const el = document.getElementById('add-form-expander');
+  el.style.display = el.style.display==='none'?'block':'none';
+}
+
+function toggleExpander(id) {
+  const body = document.querySelector(`#${id} .expander-body`);
+  if(body) body.classList.toggle('open');
+}
+
+function addItem() {
+  const name = document.getElementById('f-name').value.trim();
+  if(!name){toast('Please enter a product name','error');return;}
+  const item = {
+    id: nextId++,
+    product_name: name,
+    quantity: +document.getElementById('f-qty').value||0,
+    price: +document.getElementById('f-price').value||0,
+    expiry_date: document.getElementById('f-expiry').value,
+    supplier: document.getElementById('f-supplier').value||'Unknown',
+    category: document.getElementById('f-category').value,
+    min_qty: +document.getElementById('f-minqty').value||10,
+    lead_days: +document.getElementById('f-lead').value||3,
+    sold_today: 0
+  };
+  inventory.push(item);
+  document.getElementById('f-name').value='';
+  document.getElementById('f-supplier').value='';
+  toast(`✅ '${name}' added to inventory!`,'success');
+  renderInventoryTable();
+  document.getElementById('add-form-expander').style.display='none';
+}
+
+function removeItem(id) {
+  const item = inventory.find(i=>i.id===id);
+  if(!item) return;
+  inventory = inventory.filter(i=>i.id!==id);
+  toast(`🗑️ '${item.product_name}' removed`,'success');
+  renderAll();
+}
+
+function applyDiscount(name) { toast(`🏷️ 30% discount applied to ${name}!`,'success'); }
+function donatItem(name) { toast(`❤️ ${name} marked for donation!`,'success'); }
+
+// ═══════════════════════════════════════════════════════════════
+// FORECAST
+// ═══════════════════════════════════════════════════════════════
+function populateFcProduct() {
+  const sel = document.getElementById('fc-product');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = inventory.map(i=>`<option value="${i.product_name}" ${i.product_name===cur?'selected':''}>${i.product_name}</option>`).join('');
+}
+
+function renderForecastPage() {
+  populateFcProduct();
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('fc-date');
+  if(dateInput && !dateInput.value) dateInput.value = today;
+  renderForecast();
+}
+
+function renderForecast() {
+  const productName = document.getElementById('fc-product')?.value;
+  const period = parseInt(document.getElementById('fc-period')?.value||7);
+  const dateVal = document.getElementById('fc-date')?.value;
+  if(!productName) return;
+  
+  const item = inventory.find(i=>i.product_name===productName);
+  if(!item) return;
+
+  // Festival detection
+  const fest = getFestivalOnDate(dateVal);
+  const festLabel = document.getElementById('fc-festival-label');
+  if(festLabel) {
+    if(fest) festLabel.innerHTML = `<span class="festival-tag">${fest.icon} ${fest.name} (+50% boost!)</span>`;
+    else if(isIPLSeason()) festLabel.innerHTML = `<span class="ipl-tag">🏏 IPL Season Active</span>`;
+    else festLabel.textContent = 'None detected';
+  }
+
+  const fc = generateForecast(item, period, dateVal);
+  const rp = getReorderPoint(item);
+
+  // Metrics
+  const metricsEl = document.getElementById('fc-metrics');
+  metricsEl.innerHTML = `
+    <div class="metric-card"><div class="metric-icon">📊</div><div class="metric-val" style="font-size:22px">${fc.avg}</div><div class="metric-label">Avg Daily Demand</div></div>
+    <div class="metric-card"><div class="metric-icon">⬆️</div><div class="metric-val" style="font-size:22px">${fc.peak}</div><div class="metric-label">Peak Demand</div></div>
+    <div class="metric-card"><div class="metric-icon">🌤️</div><div class="metric-val" style="font-size:22px">+${fc.seasonBoost}%</div><div class="metric-label">${fc.season.name}</div></div>
+    <div class="metric-card ${fc.daysOfStock<period?'danger':''}"><div class="metric-icon">${fc.daysOfStock<period?'⚠️':'✅'}</div><div class="metric-val" style="font-size:22px">${fc.daysOfStock}</div><div class="metric-label">Days of Stock Left</div></div>
+  `;
+
+  // Forecast chart
+  destroyChart('fc');
+  const ctx = document.getElementById('fc-chart').getContext('2d');
+  const g = ctx.createLinearGradient(0,0,0,200);
+  g.addColorStop(0,'rgba(0,200,150,0.25)');g.addColorStop(1,'rgba(0,200,150,0)');
+  charts['fc'] = new Chart(ctx,{
+    type:'line',
+    data:{labels:fc.dates,datasets:[
+      {label:'Upper',data:fc.upper,borderColor:'transparent',fill:'+1',backgroundColor:'rgba(0,200,150,0.12)',pointRadius:0},
+      {label:'Lower',data:fc.lower,borderColor:'transparent',fill:false,pointRadius:0},
+      {label:'AI Forecast',data:fc.vals,borderColor:'#00c896',backgroundColor:g,fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#00c896'}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:chartDefaults().color,filter:i=>i.text==='AI Forecast'}}},
+      scales:{x:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}},
+              y:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}}}}
+  });
+
+  // Historical chart
+  destroyChart('hist');
+  const histDates=[],histActual=[],histFcast=[];
+  for(let i=29;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    histDates.push(d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'}));
+    const base=Math.max(3,Math.round(item.quantity*0.07));
+    const wk=d.getDay()>=5?1.25:1.0;
+    const f=Math.round(base*wk);
+    histActual.push(Math.max(0,Math.round(f*(0.85+seededRand(i,i)*0.3))));
+    histFcast.push(f);
+  }
+  const ctx2 = document.getElementById('hist-chart').getContext('2d');
+  charts['hist'] = new Chart(ctx2,{
+    type:'bar',
+    data:{labels:histDates.filter((_,i)=>i%2===0),datasets:[
+      {label:'Actual Sales',data:histActual.filter((_,i)=>i%2===0),backgroundColor:'rgba(0,200,150,0.7)'},
+      {type:'line',label:'Forecasted',data:histFcast.filter((_,i)=>i%2===0),borderColor:'#f59e0b',borderDash:[5,5],fill:false,tension:.4,pointRadius:2}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{color:chartDefaults().color,font:{size:11}}}},
+      scales:{x:{ticks:{color:chartDefaults().color,maxRotation:30},grid:{color:chartDefaults().gridColor}},
+              y:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}}}}
+  });
+
+  // Insights
+  const reorderSuggested = fc.total > item.quantity ? fc.total - item.quantity : 0;
+  document.getElementById('fc-insights').innerHTML = `
+    <div class="card-title">💡 AI Insights for ${productName} ${fest?`<span class="festival-tag">${fest.icon} ${fest.name}</span>`:''} ${isIPLSeason()?'<span class="ipl-tag">🏏 IPL Active</span>':''}</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8">
+      • Current stock will last approximately <strong style="color:var(--text)">${fc.daysOfStock} days</strong><br>
+      • Total forecasted demand: <strong style="color:var(--text)">${fc.total} units</strong> over ${period} days<br>
+      • Season: <strong style="color:var(--text)">${fc.season.name}</strong> — ${fc.season.tip}<br>
+      • Reorder Point: <strong style="color:var(--text)">${rp} units</strong> (Avg Demand × Lead Time + Safety Buffer)<br>
+      ${reorderSuggested>0?`• <strong style="color:var(--warn)">⚠️ Suggested reorder: ${reorderSuggested} units</strong>`:'• <strong style="color:var(--brand)">✅ Stock sufficient for forecast period</strong>'}<br>
+      • <em style="color:var(--text2);font-size:11px">Currently uses intelligent rule-based logic with data analysis. Can be upgraded to ML models like LSTM for advanced prediction.</em>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AI DOCTOR
+// ═══════════════════════════════════════════════════════════════
+function renderDoctor() {
+  const recs = [];
+  const issues = [];
+  const anomalies = [];
+
+  inventory.forEach(item => {
+    const days = getDaysLeft(item.expiry_date);
+    const [status] = getStatus(item);
+    const rp = getReorderPoint(item);
+
+    if(status==='Expiry Risk') {
+      recs.push({icon:'🔴',cls:'rec-red',title:`Expiry Alert: ${item.product_name}`,desc:`${item.quantity} units expire in ${days} days. Apply 30% discount or donate to recover ₹${Math.round(item.quantity*item.price*0.7).toLocaleString('en-IN')}.`});
+      issues.push({product:item.product_name,issue:'Expiry Risk',qty:item.quantity,action:'30% Discount / Donate',loss:Math.round(item.quantity*item.price*0.6),status});
+    } else if(status==='Expired') {
+      recs.push({icon:'⛔',cls:'rec-red',title:`Expired: ${item.product_name}`,desc:`${item.quantity} units already expired. Remove immediately.`});
+      issues.push({product:item.product_name,issue:'Expired',qty:item.quantity,action:'Remove Immediately',loss:item.quantity*item.price,status});
+    } else if(status==='Low Stock') {
+      const reorderQty = Math.max(rp*2,item.min_qty*3);
+      recs.push({icon:'🟡',cls:'rec-yellow',title:`Reorder Now: ${item.product_name}`,desc:`Only ${item.quantity} units left (min: ${item.min_qty}). Order ${Math.round(reorderQty)} units from ${item.supplier}. Lead time: ${item.lead_days} days.`});
+    } else if(status==='Overstock') {
+      const excess = item.quantity - rp*2;
+      recs.push({icon:'🔵',cls:'rec-blue',title:`Overstock: ${item.product_name}`,desc:`${item.quantity} units — ${Math.round(item.quantity/Math.max(1,rp)*10)/10}x above reorder point. Run promotion or return ${Math.max(0,Math.round(excess))} units.`});
+      issues.push({product:item.product_name,issue:'Overstock',qty:item.quantity,action:'Promotion / Return to Supplier',loss:Math.round(excess*item.price*0.1),status});
+    }
+
+    if(item.quantity < item.min_qty*0.3 && item.quantity>0) anomalies.push({type:'⚠️ Sudden Stock Drop',product:item.product_name,detail:`Only ${item.quantity} units — possible theft or miscount`,sev:'high'});
+    if(item.quantity===0) anomalies.push({type:'🔴 Stockout',product:item.product_name,detail:'Zero stock — sales stopped',sev:'critical'});
+    if(days<=3&&days>0&&item.quantity>5) anomalies.push({type:'🔥 Urgent Expiry',product:item.product_name,detail:`${item.quantity} units expire in ${days} day(s)!`,sev:'critical'});
+  });
+
+  document.getElementById('doctor-recs').innerHTML = recs.length ? recs.map(r=>`<div class="rec-card ${r.cls}"><div class="rec-title">${r.icon} ${r.title}</div><div class="rec-desc">${r.desc}</div></div>`).join('') : '<div class="rec-card rec-green" style="border-color:var(--brand);background:rgba(0,200,150,0.08)"><div class="rec-title">🎉 All items look healthy!</div></div>';
+
+  // P&L Chart
+  let lossNoAction=0,gainWithAI=0;
+  inventory.forEach(i=>{
+    const [s]=getStatus(i);
+    if(s==='Expiry Risk'){lossNoAction+=Math.round(i.quantity*i.price*0.8);gainWithAI+=Math.round(i.quantity*i.price*0.5);}
+    else if(s==='Expired'){lossNoAction+=i.quantity*i.price;}
+    else if(s==='Overstock'){lossNoAction+=Math.round(i.quantity*i.price*0.05);gainWithAI+=Math.round(i.quantity*i.price*0.1);}
+  });
+  destroyChart('pl');
+  const ctx = document.getElementById('pl-chart').getContext('2d');
+  charts['pl'] = new Chart(ctx,{
+    type:'bar',
+    data:{labels:['No Action 😰','With AI 🤖'],datasets:[{data:[-lossNoAction,gainWithAI],backgroundColor:['rgba(239,68,68,0.7)','rgba(0,200,150,0.7)'],borderRadius:8}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`₹${Math.abs(ctx.raw).toLocaleString('en-IN')}`}}},
+      scales:{x:{ticks:{color:chartDefaults().color},grid:{display:false}},y:{ticks:{color:chartDefaults().color},grid:{color:chartDefaults().gridColor}}}}
+  });
+
+  // Issues table
+  document.getElementById('doctor-issues-wrap').innerHTML = issues.length ? `<table><thead><tr><th>Product</th><th>Issue</th><th>Qty</th><th>Suggested Action</th><th>Est. Loss ₹</th><th>Status</th></tr></thead><tbody>${issues.map(i=>`<tr><td><strong>${i.product}</strong></td><td>${i.issue}</td><td>${i.qty}</td><td>${i.action}</td><td style="color:var(--danger);font-family:'Space Mono',monospace">₹${i.loss.toLocaleString('en-IN')}</td><td><span class="status-badge s-exp">${i.status}</span></td></tr>`).join('')}</tbody></table>` : '<p style="color:var(--text2);font-size:13px;padding:12px">No dead stock or overstock issues detected.</p>';
+
+  // Anomalies
+  document.getElementById('anomaly-list').innerHTML = anomalies.length ? anomalies.map(a=>`<div class="alert-pill ${a.sev==='critical'?'crit':'warn'}"><strong>${a.type}: ${a.product}</strong><br>${a.detail}</div>`).join('') : '<p style="color:var(--text2);font-size:13px">No anomalies detected.</p>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════════════════════════════════
+function renderAnalytics() {
+  renderCatPie();
+  renderDemandBar();
+
+  // Waste progress
+  const wasteItems = [
+    {name:'Milk Packets',before:12,after:5,action:'Discount applied'},
+    {name:'Bread',before:8,after:3,action:'Donated'},
+    {name:'Biscuits Pk',before:6,after:2,action:'Discount applied'},
+    {name:'Cheese Slices',before:4,after:1,action:'Promoted'},
+  ];
+  document.getElementById('waste-progress-list').innerHTML = wasteItems.map(w=>{
+    const pct = Math.round((1-w.after/w.before)*100);
+    return `<div class="waste-row">
+      <div class="lbl">${w.name}</div>
+      <div class="bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
+      <div style="font-size:11px;color:var(--brand);font-weight:600;width:50px">${pct}%</div>
+      <div style="font-size:11px;color:var(--text2)">${w.action}</div>
+    </div>`;
+  }).join('');
+
+  // Full table
+  document.getElementById('analytics-tbody').innerHTML = inventory.map(i=>{
+    const [s,cls]=getStatus(i);
+    return `<tr>
+      <td><strong>${i.product_name}</strong></td>
+      <td style="font-family:'Space Mono',monospace">${i.quantity}</td>
+      <td style="font-family:'Space Mono',monospace">₹${i.price}</td>
+      <td><span class="status-badge ${cls}">${s}</span></td>
+      <td style="font-family:'Space Mono',monospace;color:${getDaysLeft(i.expiry_date)<7?'var(--danger)':'var(--text2)'}">${getDaysLeft(i.expiry_date)}</td>
+      <td style="font-family:'Space Mono',monospace">${getReorderPoint(i)}</td>
+      <td style="font-family:'Space Mono',monospace">₹${(i.quantity*i.price).toLocaleString('en-IN')}</td>
+      <td>${i.category}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════════════════════════════
+function renderAlerts() {
+  renderChatWindow();
+
+  // Alert feed
+  const alerts = [];
+  inventory.forEach(i=>{
+    const days = getDaysLeft(i.expiry_date);
+    const [s] = getStatus(i);
+    const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    if(s==='Expired') alerts.push({lvl:'crit',icon:'⛔',title:'Expired Stock',msg:`${i.product_name} has expired! Remove immediately.`,time});
+    else if(days<=7&&days>0) alerts.push({lvl:'crit',icon:'🔴',title:'Expiry Risk',msg:`${i.quantity}x ${i.product_name} expiring in ${days} day(s)!`,time});
+    else if(s==='Low Stock') alerts.push({lvl:'warn',icon:'🟡',title:'Low Stock',msg:`${i.product_name}: only ${i.quantity} units left. Reorder from ${i.supplier}.`,time});
+    else if(s==='Overstock') alerts.push({lvl:'info',icon:'🔵',title:'Overstock',msg:`${i.product_name}: ${i.quantity} units overstocked. Consider promotion.`,time});
+  });
+  alerts.push({lvl:'ok',icon:'🟢',title:'AI Forecast Updated',msg:'Demand forecast refreshed with latest seasonal & festival data.',time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+
+  const feed = document.getElementById('alert-feed');
+  feed.innerHTML = alerts.map(a=>`
+    <div class="alert-pill ${a.lvl}" style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between"><strong>${a.icon} ${a.title}</strong><span style="font-size:9px;color:var(--text2)">${a.time}</span></div>
+      ${a.msg}
+    </div>`).join('');
+}
+
+function renderChatWindow() {
+  const cw = document.getElementById('chat-window');
+  cw.innerHTML = chatMsgs.slice(-15).map(m=>`
+    <div class="chat-msg ${m.sent?'sent':'received'}">
+      ${m.text}<div class="msg-time">${m.time}${m.sent?' ✓✓':''}</div>
+    </div>`).join('');
+  cw.scrollTop = cw.scrollHeight;
+}
+
+function sendChatMsg() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  chatMsgs.push({text:txt,sent:true,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+  inp.value='';
+  const reply = processVoiceCommand(txt);
+  setTimeout(()=>{
+    chatMsgs.push({text:reply,sent:false,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+    renderChatWindow();
+  },600);
+  renderChatWindow();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FESTIVAL CALENDAR
+// ═══════════════════════════════════════════════════════════════
+function renderCalendar() {
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent = `${monthNames[calMonth]} ${calYear}`;
+  
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML = '';
+  const firstDay = new Date(calYear,calMonth,1).getDay();
+  const daysInMonth = new Date(calYear,calMonth+1,0).getDate();
+  const today = new Date();
+
+  // Festival dates set for quick lookup
+  const festDates = new Set(FESTIVALS.map(f=>f.date));
+  
+  for(let i=0;i<firstDay;i++){
+    const prev = new Date(calYear,calMonth,-(firstDay-i-1));
+    grid.innerHTML += `<div class="cal-cell other-month">${prev.getDate()}</div>`;
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const isFest = festDates.has(dateStr);
+    const fest = FESTIVALS.find(f=>f.date===dateStr);
+    grid.innerHTML += `<div class="cal-cell ${isToday?'today':''} ${isFest?'festival':''}" onclick="selectCalDate('${dateStr}','${fest?fest.name:''}')" title="${fest?fest.name:''}">${d}</div>`;
+  }
+
+  // Festival info box
+  document.getElementById('cal-festival-info').innerHTML = '<p style="font-size:12px;color:var(--text2)">Click a ★ day to see festival details</p>';
+
+  // Festival list
+  const upcoming = FESTIVALS.filter(f=>{
+    const fd = new Date(f.date);
+    return fd >= new Date() && fd.getFullYear()===calYear;
+  }).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,8);
+  
+  document.getElementById('festival-list').innerHTML = upcoming.map(f=>{
+    const boostStr = Object.entries(f.boost).map(([k,v])=>`${k}: +${Math.round((v-1)*100)}%`).join(', ');
+    return `<div style="border-bottom:1px solid var(--border);padding:9px 0;font-size:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span><strong>${f.icon} ${f.name}</strong></span>
+        <span class="festival-tag">${new Date(f.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</span>
+      </div>
+      <div style="color:var(--text2);margin-top:3px;font-size:11px">📈 ${boostStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectCalDate(dateStr, festName) {
+  document.querySelectorAll('.cal-cell').forEach(c=>c.classList.remove('selected'));
+  event.target.classList.add('selected');
+  const infoEl = document.getElementById('cal-festival-info');
+  const fest = FESTIVALS.find(f=>f.date===dateStr);
+  if(fest) {
+    const boostStr = Object.entries(fest.boost).map(([k,v])=>`<span class="festival-tag" style="margin:2px">${k}: +${Math.round((v-1)*100)}%</span>`).join('');
+    infoEl.innerHTML = `<div style="background:rgba(245,158,11,0.1);border-radius:9px;padding:12px;font-size:12px">
+      <div style="font-weight:700;margin-bottom:6px">${fest.icon} ${fest.name}</div>
+      <div style="color:var(--text2);margin-bottom:6px">📅 ${new Date(dateStr).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+      <div>📈 Demand Boost: ${boostStr}</div>
+    </div>`;
+  } else {
+    infoEl.innerHTML = `<div style="font-size:12px;color:var(--text2);padding:8px">📅 ${new Date(dateStr).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} — No festival</div>`;
+  }
+}
+
+function calPrev() { if(calMonth===0){calMonth=11;calYear--;}else calMonth--; renderCalendar(); }
+function calNext() { if(calMonth===11){calMonth=0;calYear++;}else calMonth++; renderCalendar(); }
+
+// ═══════════════════════════════════════════════════════════════
+// SELL MODAL
+// ═══════════════════════════════════════════════════════════════
+function openSell(id) {
+  const sel = document.getElementById('sell-product-select');
+  sel.innerHTML = inventory.map(i=>`<option value="${i.id}" ${i.id===id?'selected':''}>${i.product_name} (Stock: ${i.quantity})</option>`).join('');
+  document.getElementById('sell-qty').value = 1;
+  document.getElementById('sell-modal').classList.add('open');
+}
+
+function closeSell() { document.getElementById('sell-modal').classList.remove('open'); }
+
+function confirmSell() {
+  const id = parseInt(document.getElementById('sell-product-select').value);
+  const qty = parseInt(document.getElementById('sell-qty').value)||1;
+  const item = inventory.find(i=>i.id===id);
+  if(!item) return;
+  if(qty > item.quantity) { toast(`❌ Only ${item.quantity} units available!`,'error'); return; }
+  item.quantity -= qty;
+  item.sold_today = (item.sold_today||0) + qty;
+  closeSell();
+  toast(`✅ Sold ${qty}x ${item.product_name}. Stock: ${item.quantity} remaining.`,'success');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VOICE ASSISTANT
+// ═══════════════════════════════════════════════════════════════
+let recognition = null;
+let isListening = false;
+
+function openVoice() {
+  document.getElementById('voice-modal').classList.add('open');
+  startVoiceRecognition();
+}
+
+function closeVoice() {
+  document.getElementById('voice-modal').classList.remove('open');
+  if(recognition && isListening) { recognition.stop(); isListening = false; }
+  document.getElementById('voice-btn').classList.remove('listening');
+}
+
+function startVoiceRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const transcript = document.getElementById('voice-transcript');
+  
+  if(!SpeechRecognition) {
+    transcript.textContent = '⚠️ Speech Recognition not supported in this browser. Use Chrome for voice features.';
+    return;
+  }
+  
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = currentLang==='hi'?'hi-IN':currentLang==='kn'?'kn-IN':currentLang==='te'?'te-IN':currentLang==='ta'?'ta-IN':'en-IN';
+  
+  recognition.onstart = ()=>{ isListening=true; document.getElementById('voice-btn').classList.add('listening'); };
+  recognition.onresult = (e)=>{
+    const text = Array.from(e.results).map(r=>r[0].transcript).join('');
+    transcript.textContent = '🎤 ' + text;
+    if(e.results[e.results.length-1].isFinal) {
+      const reply = processVoiceCommand(text.toLowerCase());
+      transcript.textContent = '✅ ' + text + '\n\n💬 ' + reply;
+      chatMsgs.push({text:`🎤 ${text}`,sent:true,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+      chatMsgs.push({text:reply,sent:false,time:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})});
+    }
+  };
+  recognition.onerror = ()=>{ transcript.textContent = '❌ Could not hear you. Try again.'; };
+  recognition.onend = ()=>{ isListening=false; document.getElementById('voice-btn').classList.remove('listening'); };
+  recognition.start();
+}
+
+function processVoiceCommand(cmd) {
+  cmd = cmd.toLowerCase();
+  const lowStock = inventory.filter(i=>getStatus(i)[0]==='Low Stock');
+  const expiring = inventory.filter(i=>getDaysLeft(i.expiry_date)>0&&getDaysLeft(i.expiry_date)<=7);
+  
+  if(cmd.includes('low stock')||cmd.includes('कम स्टॉक')||cmd.includes('ಕಡಿಮೆ')) {
+    if(lowStock.length===0) return '✅ No low stock items currently!';
+    return `🔴 ${lowStock.length} low stock items: ${lowStock.map(i=>i.product_name).join(', ')}`;
+  }
+  if(cmd.includes('expir')||cmd.includes('समाप्त')||cmd.includes('ಮುಕ್ತಾಯ')) {
+    if(expiring.length===0) return '✅ No items expiring soon!';
+    return `⚠️ ${expiring.length} items expiring: ${expiring.map(i=>`${i.product_name} (${getDaysLeft(i.expiry_date)}d)`).join(', ')}`;
+  }
+  if(cmd.includes('total value')||cmd.includes('कुल मूल्य')) {
+    const val = inventory.reduce((a,i)=>a+i.quantity*i.price,0);
+    return `💰 Total inventory value: ₹${val.toLocaleString('en-IN')}`;
+  }
+  if(cmd.includes('total')||cmd.includes('count')||cmd.includes('how many')) {
+    return `📦 You have ${inventory.length} products with total ${inventory.reduce((a,i)=>a+i.quantity,0)} units.`;
+  }
+  if(cmd.includes('ai analysis')||cmd.includes('analyze')||cmd.includes('doctor')) {
+    navigate('doctor');
+    return '🤖 Opening AI Doctor analysis...';
+  }
+  if(cmd.includes('dashboard')||cmd.includes('home')) {
+    navigate('dashboard');
+    return '📊 Navigating to Dashboard...';
+  }
+  if(cmd.includes('forecast')) {
+    navigate('forecast');
+    return '📈 Opening Demand Forecast...';
+  }
+  if(cmd.includes('festival')||cmd.includes('calendar')) {
+    navigate('calendar');
+    return '📅 Opening Festival Calendar...';
+  }
+  const addMatch = cmd.match(/add\s+(\d+)\s+(.+)/);
+  if(addMatch) {
+    const qty = parseInt(addMatch[1]);
+    const name = addMatch[2].trim();
+    const item = inventory.find(i=>i.product_name.toLowerCase().includes(name));
+    if(item) { item.quantity+=qty; renderAll(); return `✅ Added ${qty} units to ${item.product_name}. New stock: ${item.quantity}`; }
+    return `❌ Product '${name}' not found in inventory.`;
+  }
+  const replies = ['✅ Command received. Checking inventory...','📊 AI is analyzing your inventory...','🔔 Processing your request...'];
+  return replies[Math.floor(Math.random()*replies.length)];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SIDEBAR ALERTS
+// ═══════════════════════════════════════════════════════════════
+function renderSidebarAlerts() {
+  const el = document.getElementById('sidebar-alerts-container');
+  const critical = inventory.filter(i=>{const[s]=getStatus(i);return s==='Low Stock'||s==='Expiry Risk'||s==='Expired';});
+  el.innerHTML = `<div style="font-size:10px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">🔔 Live Alerts (${critical.length})</div>` +
+    critical.slice(0,3).map(i=>{
+      const[s]=getStatus(i);
+      const cls=s==='Low Stock'?'warn':s==='Overstock'?'info':'crit';
+      return `<div class="alert-pill ${cls}"><strong>${i.product_name}</strong><br>${s} — ${i.quantity} units</div>`;
+    }).join('') +
+    (critical.length===0?`<div class="alert-pill" style="border-color:var(--brand)">✅ All items healthy</div>`:'');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BARCODE LOOKUP
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('barcode-search')?.addEventListener('input', function(){
+  const q = this.value.toLowerCase();
+  const res = document.getElementById('barcode-result');
+  if(!q){res.innerHTML='';return;}
+  const found = inventory.filter(i=>i.product_name.toLowerCase().includes(q));
+  if(found.length){
+    const i=found[0];
+    const[s,cls]=getStatus(i);
+    res.innerHTML=`<div style="background:var(--bg3);border-radius:9px;padding:12px;font-size:12px">
+      <div style="font-weight:700;margin-bottom:6px">${i.product_name} — <span class="status-badge ${cls}">${s}</span></div>
+      <div style="color:var(--text2)">Qty: <strong style="color:var(--text)">${i.quantity}</strong> · Price: <strong style="color:var(--text)">₹${i.price}</strong> · Supplier: <strong style="color:var(--text)">${i.supplier}</strong></div>
+      <div style="color:var(--text2);margin-top:4px">Expiry: <strong style="color:var(--text)">${i.expiry_date}</strong> (${getDaysLeft(i.expiry_date)}d) · Reorder Pt: <strong style="color:var(--text)">${getReorderPoint(i)}</strong></div>
+    </div>`;
+  } else { res.innerHTML=`<div style="color:var(--danger);font-size:12px;padding:8px">No product found for "${this.value}"</div>`; }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT / IMPORT CSV
+// ═══════════════════════════════════════════════════════════════
+function exportCSV() {
+  const headers = ['product_name','quantity','price','expiry_date','supplier','min_qty','lead_days','category','sold_today'];
+  const rows = inventory.map(i=>headers.map(h=>i[h]||'').join(','));
+  const csv = [headers.join(','),...rows].join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='smartstock_inventory.csv'; a.click();
+  toast('📥 CSV exported!','success');
+}
+
+function importCSV(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l=>l.trim());
+    const headers = lines[0].split(',').map(h=>h.trim());
+    const required = ['product_name','quantity','price','expiry_date','supplier'];
+    const missing = required.filter(r=>!headers.includes(r));
+    if(missing.length){toast(`Missing columns: ${missing.join(', ')}`,'error');return;}
+    inventory = lines.slice(1).map((line,idx)=>{
+      const vals = line.split(',');
+      const obj = {};
+      headers.forEach((h,i)=>obj[h]=vals[i]?.trim()||'');
+      return {...obj,id:nextId++,quantity:+obj.quantity||0,price:+obj.price||0,min_qty:+obj.min_qty||10,lead_days:+obj.lead_days||3,sold_today:+obj.sold_today||0,category:obj.category||'Other'};
+    });
+    toast(`✅ Loaded ${inventory.length} products!`,'success');
+    renderAll();
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════════════
+function renderAll() {
+  renderSidebarAlerts();
+  renderPage(currentPage);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+(function init(){
+  applyLang();
+  renderAll();
+  // Set default expiry on form
+  const exp = document.getElementById('f-expiry');
+  if(exp){const d=new Date();d.setFullYear(d.getFullYear()+1);exp.value=d.toISOString().split('T')[0];}
+})();
+</script>
+</body>
+</html>
