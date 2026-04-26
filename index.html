@@ -802,6 +802,7 @@ let inventory = [
 ];
 
 let nextId = inventory.length + 1;
+var sales_history = {};
 
 // Chat messages
 let chatMsgs = [
@@ -837,18 +838,18 @@ const FESTIVALS = [
 
 // Seasons
 const SEASONS = {
-  3:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
-  4:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
-  5:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
-  6:{name:"Summer ☀️",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:1.45,Snacks:1.2,Dairy:0.9,Grains:1.0,Household:1.0,Condiments:1.0,Bakery:0.95}},
-  7:{name:"Monsoon 🌧️",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:1.2,Snacks:1.35,Dairy:1.0,Grains:1.1,Household:1.0,Condiments:1.05,Bakery:1.1}},
-  8:{name:"Monsoon 🌧️",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:1.2,Snacks:1.35,Dairy:1.0,Grains:1.1,Household:1.0,Condiments:1.05,Bakery:1.1}},
-  9:{name:"Monsoon 🌧️",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:1.2,Snacks:1.35,Dairy:1.0,Grains:1.1,Household:1.0,Condiments:1.05,Bakery:1.1}},
-  10:{name:"Festival 🎉",icon:"🎉",tip:"Sweets, snacks & beverages peak for festivals",boost:{Beverages:1.3,Snacks:1.55,Dairy:1.2,Grains:1.15,Household:1.25,Condiments:1.3,Bakery:1.4}},
-  11:{name:"Festival 🎉",icon:"🎉",tip:"Sweets, snacks & beverages peak for festivals",boost:{Beverages:1.3,Snacks:1.55,Dairy:1.2,Grains:1.15,Household:1.25,Condiments:1.3,Bakery:1.4}},
-  12:{name:"Winter ❄️",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:1.35,Snacks:1.1,Dairy:1.1,Grains:1.05,Household:1.0,Condiments:1.0,Bakery:1.05}},
-  1:{name:"Winter ❄️",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:1.35,Snacks:1.1,Dairy:1.1,Grains:1.05,Household:1.0,Condiments:1.0,Bakery:1.05}},
-  2:{name:"Winter ❄️",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:1.35,Snacks:1.1,Dairy:1.1,Grains:1.05,Household:1.0,Condiments:1.0,Bakery:1.05}},
+  3:{name:"Summer",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:45,Snacks:20,Dairy:-10,Grains:0,Household:0,Condiments:0,Bakery:5}},
+  4:{name:"Summer",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:45,Snacks:20,Dairy:-10,Grains:0,Household:0,Condiments:0,Bakery:5}},
+  5:{name:"Summer",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:45,Snacks:20,Dairy:-10,Grains:0,Household:0,Condiments:0,Bakery:5}},
+  6:{name:"Summer",icon:"☀️",tip:"Cold drinks & ice cream demand peaks",boost:{Beverages:45,Snacks:20,Dairy:-10,Grains:0,Household:0,Condiments:0,Bakery:5}},
+  7:{name:"Rainy",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:10,Snacks:15,Dairy:0,Grains:0,Household:0,Condiments:0,Bakery:0}},
+  8:{name:"Rainy",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:10,Snacks:15,Dairy:0,Grains:0,Household:0,Condiments:0,Bakery:0}},
+  9:{name:"Rainy",icon:"🌧️",tip:"Hot tea, snacks & instant food rise",boost:{Beverages:10,Snacks:15,Dairy:0,Grains:0,Household:0,Condiments:0,Bakery:0}},
+  10:{name:"Festival",icon:"🎉",tip:"Sweets, snacks & beverages peak for festivals",boost:{Beverages:30,Snacks:55,Dairy:20,Grains:15,Household:25,Condiments:30,Bakery:40}},
+  11:{name:"Festival",icon:"🎉",tip:"Sweets, snacks & beverages peak for festivals",boost:{Beverages:30,Snacks:55,Dairy:20,Grains:15,Household:25,Condiments:30,Bakery:40}},
+  12:{name:"Winter",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:-10,Snacks:5,Dairy:15,Grains:0,Household:0,Condiments:0,Bakery:0}},
+  1:{name:"Winter",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:-10,Snacks:5,Dairy:15,Grains:0,Household:0,Condiments:0,Bakery:0}},
+  2:{name:"Winter",icon:"❄️",tip:"Hot beverages, tea & warm food demand up",boost:{Beverages:-10,Snacks:5,Dairy:15,Grains:0,Household:0,Condiments:0,Bakery:0}},
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -859,6 +860,12 @@ let isDark = true;
 let currentPage = 'dashboard';
 let calYear = new Date().getFullYear();
 let calMonth = new Date().getMonth();
+let currentSeason = 'Summer';
+const seasonIcons = {
+  Summer: "☀️",
+  Winter: "❄️",
+  Rainy: "🌧️"
+};
 let charts = {};
 
 function t(key) { return (LANG[currentLang] || LANG.en)[key] || key; }
@@ -895,7 +902,88 @@ function getStatus(item) {
 }
 
 function getSeason(month) {
-  return SEASONS[month || new Date().getMonth()+1];
+  if (month) return SEASONS[month];
+  if (currentSeason === 'Winter') return SEASONS[1];
+  if (currentSeason === 'Rainy') return SEASONS[8];
+  return SEASONS[4];
+}
+
+function updateSalesHistory(productName, quantity) {
+  if (!sales_history[productName]) {
+    sales_history[productName] = [];
+  }
+  sales_history[productName].push(quantity);
+  if (sales_history[productName].length > 7) {
+    sales_history[productName] = sales_history[productName].slice(-7);
+  }
+}
+
+function getStockStatus(productName) {
+  const history = sales_history[productName] || [];
+  const totalSales = history.reduce((sum, value) => sum + value, 0);
+  if (totalSales === 0) return '❌ Dead Stock';
+  if (totalSales <= 2) return '⚠️ Slow Moving';
+  return '✅ Active';
+}
+
+function getRestockSuggestion(productName) {
+  const history = sales_history[productName] || [];
+  const totalSales = history.reduce((sum, value) => sum + value, 0);
+  const avg = history.length ? totalSales / history.length : 0;
+  const item = inventory.find(product => product.product_name === productName);
+  const stock = item ? item.quantity : 0;
+
+  if (stock === 0) return '🔴 Urgent Restock';
+  if (stock < avg * 3) return '🟡 Restock Soon';
+  if (stock > avg * 10) return '⚠️ Overstock';
+  return '🟢 Stock Healthy';
+}
+
+function getPriceSuggestion(productName) {
+  const history = sales_history[productName] || [];
+  const totalSales = history.reduce((sum, value) => sum + value, 0);
+  const avg = history.length ? totalSales / history.length : 0;
+  const item = inventory.find(product => product.product_name === productName);
+  const stock = item ? item.quantity : 0;
+
+  if (avg >= 5) return '💰 Increase Price (+10%)';
+  if (avg <= 2) return '📉 Decrease Price (-10%)';
+  if (stock > avg * 10) return '⚠️ Discount Suggested';
+  return '✅ Optimal Price';
+}
+
+function getAIInsight(productName) {
+  const history = sales_history[productName] || [];
+  const totalSales = history.reduce((sum, value) => sum + value, 0);
+  const stockStatus = getStockStatus(productName);
+  const restockSuggestion = getRestockSuggestion(productName);
+  const priceSuggestion = getPriceSuggestion(productName);
+
+  let trend = '→ Stable';
+  if (history.length > 1) {
+    const first = history[0];
+    const last = history[history.length - 1];
+    if (last > first) trend = '↑ Increasing';
+    else if (last < first) trend = '↓ Decreasing';
+  }
+
+  if (stockStatus === '❌ Dead Stock' || stockStatus === '⚠️ Slow Moving' || priceSuggestion === '📉 Decrease Price (-10%)') {
+    return 'Low demand product. Reduce stock and apply discounts.';
+  }
+
+  if (trend === '↑ Increasing' || priceSuggestion === '💰 Increase Price (+10%)' || restockSuggestion === '🟡 Restock Soon' || restockSuggestion === '🔴 Urgent Restock') {
+    return 'High demand detected. Consider increasing price and restocking soon.';
+  }
+
+  if (restockSuggestion === '⚠️ Overstock' || priceSuggestion === '⚠️ Discount Suggested') {
+    return 'Stock is above demand. Reduce purchases and consider discounts.';
+  }
+
+  if (totalSales > 0 && stockStatus === '✅ Active' && restockSuggestion === '🟢 Stock Healthy' && priceSuggestion === '✅ Optimal Price') {
+    return 'Stable product with healthy sales and optimal pricing.';
+  }
+
+  return 'Sales are balanced. Keep monitoring demand and stock levels.';
 }
 
 function getFestivalOnDate(dateStr) {
@@ -929,7 +1017,8 @@ function seededRand(seed, i) {
 
 function generateForecast(item, days, festivalDate) {
   const season = getSeason();
-  const seasonBoost = season.boost[item.category] || 1.0;
+  const seasonBoostPercent = season.boost[item.category] || 0;
+  const seasonBoost = 1 + (seasonBoostPercent / 100);
   const base = Math.max(3, Math.round(item.quantity * 0.08));
   const seed = item.product_name.split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 100;
   
@@ -955,7 +1044,7 @@ function generateForecast(item, days, festivalDate) {
   const peak = Math.max(...vals);
   const total = vals.reduce((a,b)=>a+b,0);
   const daysOfStock = avg>0 ? Math.round(item.quantity/avg) : 99;
-  return {dates,vals,lower,upper,avg:Math.round(avg*10)/10,peak,total,daysOfStock,seasonBoost:Math.round((seasonBoost-1)*100),season};
+  return {dates,vals,lower,upper,avg:Math.round(avg*10)/10,peak,total,daysOfStock,seasonBoost:Math.round(seasonBoostPercent),season};
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1025,7 +1114,7 @@ function renderDashboard() {
 
   // Badges
   const season = getSeason();
-  document.getElementById('season-badge').textContent = season.icon + ' ' + season.name.split(' ')[0];
+  document.getElementById('season-badge').textContent = `${seasonIcons[currentSeason]} ${currentSeason}`;
   const nf = getNextFestival();
   document.getElementById('festival-next-badge').textContent = nf ? `${nf.icon} Next: ${nf.name} (${new Date(nf.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})})` : '';
   document.getElementById('ipl-badge').style.display = isIPLSeason() ? 'inline' : 'none';
@@ -1051,10 +1140,12 @@ function renderDashboard() {
   document.getElementById('today-date-badge').style.display = fest ? 'inline-block' : 'none';
 
   // Season info
-  document.getElementById('season-info-box').innerHTML = `${season.icon} <strong>${season.name}</strong> — ${season.tip} ${isIPLSeason()?'<span class="ipl-tag">🏏 IPL +45% Beverages</span>':''}`;
-  const boostEntries = Object.entries(season.boost).map(([k,v])=>
-    `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${k}</span><span style="color:${v>1?'var(--brand)':'var(--text2)'};font-weight:600">+${Math.round((v-1)*100)}%</span></div>`
-  ).join('');
+  document.getElementById('season-info-box').innerHTML = `${seasonIcons[currentSeason]} <strong>${currentSeason}</strong> — ${season.tip} ${isIPLSeason()?'<span class="ipl-tag">🏏 IPL +45% Beverages</span>':''}`;
+  const boostEntries = Object.entries(season.boost).map(([k,v])=>{
+    const color = v > 0 ? 'var(--brand)' : v < 0 ? 'var(--danger)' : 'var(--text2)';
+    const label = v > 0 ? `+${v}%` : v < 0 ? `${v}%` : '0%';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${k}</span><span style="color:${color};font-weight:600">${label}</span></div>`;
+  }).join('');
   document.getElementById('season-boost-table').innerHTML = boostEntries;
 
   // Expiry warnings
@@ -1219,6 +1310,121 @@ function renderInventoryTable() {
   populateFcProduct();
 }
 
+function renderSalesTrends() {
+  let seasonWrap = document.getElementById('season-selector-wrap');
+  if (!seasonWrap) {
+    seasonWrap = document.createElement('div');
+    seasonWrap.id = 'season-selector-wrap';
+    seasonWrap.style.marginBottom = '16px';
+    seasonWrap.style.display = 'flex';
+    seasonWrap.style.alignItems = 'center';
+    seasonWrap.style.gap = '10px';
+    seasonWrap.innerHTML = '<strong>Season</strong><select id="season-select" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:12px;font-family:\'DM Sans\',sans-serif"><option value="Summer">Summer</option><option value="Winter">Winter</option><option value="Rainy">Rainy</option></select><span id="season-selected-label" style="font-size:12px;color:var(--text2)"></span>';
+    const main = document.getElementById('main');
+    if (main) {
+      main.insertAdjacentElement('afterbegin', seasonWrap);
+    }
+    const seasonSelect = document.getElementById('season-select');
+    if (seasonSelect) {
+      seasonSelect.value = currentSeason;
+      seasonSelect.addEventListener('change', function() {
+        currentSeason = this.value;
+        renderSalesTrends();
+        renderForecast();
+        renderDashboard();
+      });
+    }
+  }
+
+  const seasonLabel = document.getElementById('season-selected-label');
+  if (seasonLabel) {
+    seasonLabel.textContent = `Season: ${currentSeason}`;
+  }
+
+  let section = document.getElementById('sales-trend-section');
+  if (!section) {
+    section = document.createElement('div');
+    section.id = 'sales-trend-section';
+    section.className = 'card';
+    section.style.marginTop = '16px';
+    section.innerHTML = '<div class="card-title">📊 <span>Sales Trend (Last 7 Days)</span></div><div id="sales-trend-content" style="display:flex;flex-direction:column;gap:10px"></div>';
+    const inventoryCard = document.querySelector('#page-inventory .card');
+    if (inventoryCard && inventoryCard.parentNode) {
+      inventoryCard.insertAdjacentElement('afterend', section);
+    }
+  }
+
+  const content = document.getElementById('sales-trend-content');
+  if (!content) return;
+
+  const productNames = inventory.map(item => item.product_name);
+  const historyNames = Object.keys(sales_history);
+  const names = productNames.length ? productNames : historyNames;
+
+  content.innerHTML = names.map(productName => {
+    const history = sales_history[productName] || [];
+    if (!history.length) {
+      return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--bg3);font-size:12px">
+        <div style="font-weight:700;margin-bottom:4px">${productName}</div>
+        <div style="color:var(--text2)">No sales data yet</div>
+      </div>`;
+    }
+
+    const values = history.join(', ');
+    const total = history.reduce((sum, value) => sum + value, 0);
+    const average = total / history.length;
+    let seasonMultiplier = 1.2;
+    if (currentSeason === 'Winter') seasonMultiplier = 0.9;
+    else if (currentSeason === 'Rainy') seasonMultiplier = 1.1;
+    const adjustedAverage = average * seasonMultiplier;
+    const prediction = Math.round(adjustedAverage);
+    const item = inventory.find(product => product.product_name === productName);
+    const stock = item ? item.quantity : 0;
+    let alert = '✅ Good Sales';
+    if (adjustedAverage === 0) {
+      alert = '❌ No Demand';
+    } else if (stock > adjustedAverage * 10) {
+      alert = '⚠️ Overstock Risk';
+    } else if (adjustedAverage < 3) {
+      alert = '⚠️ Low Demand';
+    } else if (adjustedAverage >= 5) {
+      alert = '✅ Good Sales';
+    }
+    let recommendation = 'Maintain Current Stock';
+    if (alert === '❌ No Demand') {
+      recommendation = 'Avoid Restocking';
+    } else if (alert === '⚠️ Low Demand') {
+      recommendation = 'Reduce Stock';
+    } else if (alert === '⚠️ Overstock Risk') {
+      recommendation = 'Stop Buying';
+    } else if (alert === '✅ Good Sales') {
+      recommendation = 'Restock More';
+    }
+    let trend = '→ Stable';
+    if (history.length > 1) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      if (last > first) trend = '↑ Increasing';
+      else if (last < first) trend = '↓ Decreasing';
+    }
+    return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--bg3);font-size:12px">
+      <div style="font-weight:700;margin-bottom:4px">${productName}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Last 7 sales: ${values}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Avg: ${average.toFixed(1)}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Prediction (Next Day): ${prediction}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Alert: ${alert}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Recommendation: ${recommendation}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Status: ${getStockStatus(productName)}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Restock: ${getRestockSuggestion(productName)}</div>
+      <div style="color:var(--text2);margin-bottom:4px">Price: ${getPriceSuggestion(productName)}</div>
+      <div style="color:var(--text2);margin-bottom:4px">🧠 AI Insight: ${getAIInsight(productName)}</div>
+      <div style="font-weight:600">Trend: ${trend}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--text2)">No sales history yet.</div>';
+}
+
+renderSalesTrends();
+
 function openAddForm() {
   const el = document.getElementById('add-form-expander');
   el.style.display = el.style.display==='none'?'block':'none';
@@ -1307,7 +1513,7 @@ function renderForecast() {
   metricsEl.innerHTML = `
     <div class="metric-card"><div class="metric-icon">📊</div><div class="metric-val" style="font-size:22px">${fc.avg}</div><div class="metric-label">Avg Daily Demand</div></div>
     <div class="metric-card"><div class="metric-icon">⬆️</div><div class="metric-val" style="font-size:22px">${fc.peak}</div><div class="metric-label">Peak Demand</div></div>
-    <div class="metric-card"><div class="metric-icon">🌤️</div><div class="metric-val" style="font-size:22px">+${fc.seasonBoost}%</div><div class="metric-label">${fc.season.name}</div></div>
+    <div class="metric-card"><div class="metric-icon">🌤️</div><div class="metric-val" style="font-size:22px">${fc.seasonBoost > 0 ? `+${fc.seasonBoost}%` : fc.seasonBoost < 0 ? `${fc.seasonBoost}%` : '0%'}</div><div class="metric-label">${currentSeason}</div></div>
     <div class="metric-card ${fc.daysOfStock<period?'danger':''}"><div class="metric-icon">${fc.daysOfStock<period?'⚠️':'✅'}</div><div class="metric-val" style="font-size:22px">${fc.daysOfStock}</div><div class="metric-label">Days of Stock Left</div></div>
   `;
 
@@ -1359,7 +1565,7 @@ function renderForecast() {
     <div style="font-size:13px;color:var(--text2);line-height:1.8">
       • Current stock will last approximately <strong style="color:var(--text)">${fc.daysOfStock} days</strong><br>
       • Total forecasted demand: <strong style="color:var(--text)">${fc.total} units</strong> over ${period} days<br>
-      • Season: <strong style="color:var(--text)">${fc.season.name}</strong> — ${fc.season.tip}<br>
+      • Season: <strong style="color:var(--text)">${currentSeason}</strong> — ${fc.season.tip}<br>
       • Reorder Point: <strong style="color:var(--text)">${rp} units</strong> (Avg Demand × Lead Time + Safety Buffer)<br>
       ${reorderSuggested>0?`• <strong style="color:var(--warn)">⚠️ Suggested reorder: ${reorderSuggested} units</strong>`:'• <strong style="color:var(--brand)">✅ Stock sufficient for forecast period</strong>'}<br>
       • <em style="color:var(--text2);font-size:11px">Currently uses intelligent rule-based logic with data analysis. Can be upgraded to ML models like LSTM for advanced prediction.</em>
@@ -1605,9 +1811,11 @@ function confirmSell() {
   if(qty > item.quantity) { toast(`❌ Only ${item.quantity} units available!`,'error'); return; }
   item.quantity -= qty;
   item.sold_today = (item.sold_today||0) + qty;
+  updateSalesHistory(item.product_name, qty);
   closeSell();
   toast(`✅ Sold ${qty}x ${item.product_name}. Stock: ${item.quantity} remaining.`,'success');
   renderAll();
+  renderSalesTrends();
 }
 
 // ═══════════════════════════════════════════════════════════════
